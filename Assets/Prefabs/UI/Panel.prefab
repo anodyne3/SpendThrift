@@ -335,6 +335,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CloseButton
       objectReference: {fileID: 0}
+    - target: {fileID: 1137485068936835763, guid: 376471c0c06430644b552f0edcc66109, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7966451685222140529, guid: 376471c0c06430644b552f0edcc66109, type: 3}
       propertyPath: m_Pivot.x
       value: 1
