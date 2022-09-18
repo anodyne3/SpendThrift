@@ -20,11 +20,8 @@ public class SummaryView : View
     
     private void EditSpend()
     {
-        ViewManager.ShowView(ViewType.Spend, 0);
+        ViewManager.ShowView(ViewType.Spend, new []{0});
     }
     
-    public override ViewType GetViewType()
-    {
-        return ViewType.Summary;
-    }
+    public override ViewType GetViewType() => ViewType.Summary;
 }
