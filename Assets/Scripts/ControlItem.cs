@@ -38,8 +38,14 @@ public abstract class ToolsControlItem<T> : ControlItem<T> where T : SaveData, n
             case SpendData _:
                 ViewManager.ShowView(ViewType.EditSpend, context);
                 break;
+            case UserData userData when itemToolOptions == ItemToolOptions.Default:
+                userData.SetAsDefault();
+                break;
             case UserData _:
                 ViewManager.ShowView(ViewType.EditUser, context);
+                break;
+            case CategoryData categoryData when itemToolOptions == ItemToolOptions.Default:
+                categoryData.SetAsDefault();
                 break;
             case CategoryData _:
                 ViewManager.ShowView(ViewType.EditCategory, context);

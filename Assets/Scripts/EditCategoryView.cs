@@ -12,7 +12,7 @@ public class EditCategoryView : EditView<CategoryData>
     private void InitializeDropdown()
     {
         categoryDropdown.interactable = true;
-        categoryDropdown.options = new List<TMP_Dropdown.OptionData> {new TMP_Dropdown.OptionData {text = "None"}};
+        categoryDropdown.options = new List<TMP_Dropdown.OptionData> {new() {text = "None"}};
 
         foreach (var category in Database.categoryData)
         {
@@ -40,29 +40,6 @@ public class EditCategoryView : EditView<CategoryData>
         categoryName.contentType = TMP_InputField.ContentType.Name;
     }
 
-    protected override void ConfirmChanges()
-    {
-        base.ConfirmChanges();
-
-        switch (itemToolOptions)
-        {
-            case ItemToolOptions.Edit:
-                saveData.Update(categoryName.text, categoryId);
-                break;
-            case ItemToolOptions.Delete:
-                DeleteItem();
-                break;
-            case ItemToolOptions.Duplicate:
-                DuplicateItem(new CategoryData(Database.GetFreeId<CategoryData>(), categoryName.text, categoryId));
-                break;
-            default:
-                Database.SetNewData(new CategoryData(context[0], categoryName.text, categoryId));
-                break;
-        }
-
-        ViewManager.RefreshView(ViewType.Category);
-    }
-
     protected override void RefreshView()
     {
         categoryName.text = saveData?.name;
@@ -81,6 +58,38 @@ public class EditCategoryView : EditView<CategoryData>
                 InitializeDropdown();
                 break;
         }
+    }
+
+    protected override void ConfirmChanges()
+    {
+        base.ConfirmChanges();
+
+        switch (itemToolOptions)
+        {
+            case ItemToolOptions.Edit:
+                saveData.name = categoryName.text;
+                saveData.parentCategoryId = categoryId;
+                saveData.Save();
+                break;
+            case ItemToolOptions.Delete:
+                DeleteItem();
+                break;
+            case ItemToolOptions.Duplicate:
+                DuplicateItem(new CategoryData(Database.GetFreeId<CategoryData>(), categoryName.text, categoryId));
+                break;
+            default:
+                Database.SetNewData(new CategoryData(context[0], categoryName.text, categoryId));
+                break;
+        }
+
+        ViewManager.RefreshView(ViewType.Category);
+    }
+
+    protected override void OnHide()
+    {
+        base.OnHide();
+        
+        categoryName.onValueChanged.RemoveListener(TestNameChange);
     }
 
     public override ViewType GetViewType() => ViewType.EditCategory;

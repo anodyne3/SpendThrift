@@ -25,19 +25,19 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
         confirmChangesButton.onClick.AddListener(ConfirmChanges);
     }
 
-    protected virtual void CancelChanges()
-    {
-        Hide();
-    }
+    protected abstract void RefreshView();
 
-    protected virtual void ConfirmChanges()
+    protected virtual void ConfirmChanges() // todo - save here
     {
         context ??= new[] {Database.GetFreeId<T>(), 0};
 
         Hide();
     }
 
-    protected abstract void RefreshView();
+    protected virtual void CancelChanges()
+    {
+        Hide();
+    }
 
     protected virtual void DeleteItem()
     {

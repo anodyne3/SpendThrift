@@ -22,6 +22,27 @@ public class EditUserView : EditView<UserData>
         userName.contentType = TMP_InputField.ContentType.Name;
     }
 
+    protected override void RefreshView()
+    {
+        userName.text = saveData?.name;
+
+        userName.interactable = itemToolOptions != ItemToolOptions.Delete;
+        alertText.enabled = itemToolOptions > 0 && itemToolOptions != ItemToolOptions.Edit;
+
+        switch (itemToolOptions)
+        {
+            case ItemToolOptions.Delete:
+                alertText.text = "Are you sure you wish to permanently remove this User?";
+                confirmChangesButton.interactable = true;
+                break;
+            default:
+                alertText.text = "Please select a unique name for the new User.";
+                userName.onValueChanged.AddListener(TestNameChange);
+                confirmChangesButton.interactable = itemToolOptions == ItemToolOptions.Edit;
+                break;
+        }
+    }
+
     protected override void ConfirmChanges()
     {
         base.ConfirmChanges();
@@ -29,7 +50,8 @@ public class EditUserView : EditView<UserData>
         switch (itemToolOptions)
         {
             case ItemToolOptions.Edit:
-                saveData.UpdateName(userName.text);
+                saveData.name = userName.text;
+                saveData.Save();
                 break;
             case ItemToolOptions.Delete:
                 DeleteItem();
@@ -50,27 +72,6 @@ public class EditUserView : EditView<UserData>
         base.OnHide();
 
         userName.onValueChanged.RemoveListener(TestNameChange);
-    }
-
-    protected override void RefreshView()
-    {
-        userName.text = saveData?.name;
-
-        userName.interactable = itemToolOptions != ItemToolOptions.Delete;
-        alertText.enabled = itemToolOptions > 0 && itemToolOptions != ItemToolOptions.Edit;
-
-        switch (itemToolOptions)
-        {
-            case ItemToolOptions.Delete:
-                alertText.text = "Are you sure you wish to permanently remove this User?";
-                confirmChangesButton.interactable = true;
-                break;
-            default:
-                alertText.text = "Please select a unique name for the new User.";
-                userName.onValueChanged.AddListener(TestNameChange);
-                confirmChangesButton.interactable = itemToolOptions == ItemToolOptions.Edit;
-                break;
-        }
     }
 
     public override ViewType GetViewType() => ViewType.EditUser;

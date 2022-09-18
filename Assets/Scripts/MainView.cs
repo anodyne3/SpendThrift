@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,6 +17,11 @@ public class MainView : View
         ViewManager.ShowView(ViewType.Main);
     }
 
+    private void Start()
+    {
+        SpendThriftUtils.SetConsistentFontSize(new List<Component> {categoryButton, spendButton, usersButton});
+    }
+
     private void SwitchMode()
     {
         ViewManager.ShowView(forecastMode ? ViewType.Summary : ViewType.Forecast);
@@ -30,39 +35,4 @@ public class MainView : View
     }
 
     public override ViewType GetViewType() => ViewType.Main;
-}
-
-[Serializable]
-public class Spend
-{
-    private int id;
-    private DateTime date;
-    private float amount;
-    private int spendCategoryId;
-    private int[] splitIds;
-    private string description;
-    private bool isRecurring;
-}
-
-[Serializable]
-public class SplitShare
-{
-    private int id;
-    private int userId;
-    private float split;
-}
-
-[Serializable]
-public class User
-{
-    private int id;
-    private string name;
-}
-
-[Serializable]
-public class SpendCategory
-{
-    private int id;
-    private string categoryName;
-    private int parentCategory;
 }

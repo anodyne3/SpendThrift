@@ -10,6 +10,9 @@ public static class SaveSystem
     private static readonly string SpendPath = $"{DataPath}/Spend.xml";
     private static readonly string UserPath = $"{DataPath}/User.xml";
     private static readonly string CategoryPath = $"{DataPath}/Category.xml";
+    
+    public const string DefaultCategoryKey = "defaultCategoryKey";
+    public const string DefaultUserKey = "defaultUserKey";
 
     public static List<T> LoadData<T>() where T : SaveData, new()
     {
@@ -35,6 +38,15 @@ public static class SaveSystem
         }
 
         return saveData;
+    }
+
+    public static SettingsData LoadSettings()
+    {
+        return new SettingsData
+        {
+            defaultUserId = PlayerPrefs.GetInt(DefaultUserKey, 0),
+            defaultCategoryId = PlayerPrefs.GetInt(DefaultCategoryKey, 0)
+        };
     }
 
     public static void SaveData<T>() where T : SaveData, new()

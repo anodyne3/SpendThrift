@@ -2,18 +2,23 @@
 
 public static class Database
 {
-    public static List<SpendData> spendData { get; private set; } = new List<SpendData>();
-    public static List<UserData> userData { get; private set; } = new List<UserData>();
-    public static List<CategoryData> categoryData { get; private set; } = new List<CategoryData>();
+    public static List<CategoryData> categoryData { get; private set; } = new();
+    public static List<SpendData> spendData { get; private set; } = new();
+    public static List<UserData> userData { get; private set; } = new();
+    public static SettingsData settingsData { get; private set; } = new();
+
+    public static UserData DefaultUser => GetISaveData<UserData>(settingsData.defaultUserId);
+    public static CategoryData DefaultCategory => GetISaveData<CategoryData>(settingsData.defaultCategoryId);
 
     public static void LoadData()
     {
         spendData = SaveSystem.LoadData<SpendData>();
         userData = SaveSystem.LoadData<UserData>();
         categoryData = SaveSystem.LoadData<CategoryData>();
+        settingsData = SaveSystem.LoadSettings();
     }
 
-    /*public static SaveData GetSaveData<T>(int id) where T : SaveData, new()
+    public static T GetISaveData<T>(int id) where T : SaveData, new()
     {
         var t = new T();
 
@@ -28,7 +33,7 @@ public static class Database
         }
 
         return t;
-    }*/
+    }
 
     public static ISaveData GetSaveData<T>(int id) where T : ISaveData, new()
     {
@@ -36,12 +41,12 @@ public static class Database
 
         switch (t)
         {
+            case CategoryData _:
+                return GetCategoryData(id);
             case SpendData _:
                 return GetSpendData(id);
             case UserData _:
                 return GetUserData(id);
-            case CategoryData _:
-                return GetCategoryData(id);
         }
 
         return t as SaveData;
@@ -53,12 +58,12 @@ public static class Database
 
         switch (t)
         {
-            case UserData _:
-                return userData as List<T>;
-            case SpendData _:
-                return spendData as List<T>;
             case CategoryData _:
                 return categoryData as List<T>;
+            case SpendData _:
+                return spendData as List<T>;
+            case UserData _:
+                return userData as List<T>;
         }
 
         return null;
@@ -70,6 +75,10 @@ public static class Database
 
         switch (t)
         {
+            case CategoryData _:
+                categoryData.Remove(GetCategoryData(id));
+                SaveSystem.SaveData<CategoryData>();
+                break;
             case SpendData _:
                 spendData.Remove(GetSpendData(id));
                 SaveSystem.SaveData<SpendData>();
@@ -78,26 +87,22 @@ public static class Database
                 userData.Remove(GetUserData(id));
                 SaveSystem.SaveData<UserData>();
                 break;
-            case CategoryData _:
-                categoryData.Remove(GetCategoryData(id));
-                SaveSystem.SaveData<CategoryData>();
-                break;
         }
-    }
-
-    private static SpendData GetSpendData(int id)
-    {
-        return spendData.Find(x => x.id == id) as SpendData;
-    }
-
-    private static UserData GetUserData(int id)
-    {
-        return userData.Find(x => x.id == id) as UserData;
     }
 
     public static CategoryData GetCategoryData(int id)
     {
-        return categoryData.Find(x => x.id == id) as CategoryData;
+        return categoryData.Find(x => x.id == id);
+    }
+
+    private static SpendData GetSpendData(int id)
+    {
+        return spendData.Find(x => x.id == id);
+    }
+
+    private static UserData GetUserData(int id)
+    {
+        return userData.Find(x => x.id == id);
     }
 
     public static void SetNewData<T>(int id) where T : new()
@@ -107,6 +112,11 @@ public static class Database
 
         switch (newSaveData)
         {
+            case CategoryData newData:
+                oldData = categoryData.Find(x => x.id == newData.id);
+                categoryData.Remove((CategoryData) oldData);
+                categoryData.Add(newData);
+                break;
             case SpendData newData:
                 oldData = spendData.Find(x => x.id == newData.id);
                 spendData.Remove((SpendData) oldData);
@@ -116,11 +126,6 @@ public static class Database
                 oldData = userData.Find(x => x.id == newData.id);
                 userData.Remove((UserData) oldData);
                 userData.Add(newData);
-                break;
-            case CategoryData newData:
-                oldData = categoryData.Find(x => x.id == newData.id);
-                categoryData.Remove((CategoryData) oldData);
-                categoryData.Add(newData);
                 break;
         }
     }
@@ -131,6 +136,12 @@ public static class Database
 
         switch (saveData)
         {
+            case CategoryData newData:
+                oldData = categoryData.Find(x => x.id == newData.id);
+                categoryData.Remove((CategoryData) oldData);
+                categoryData.Add(newData);
+                SaveSystem.SaveData<CategoryData>();
+                break;
             case SpendData newData:
                 oldData = spendData.Find(x => x.id == newData.id);
                 spendData.Remove((SpendData) oldData);
@@ -142,12 +153,6 @@ public static class Database
                 userData.Remove((UserData) oldData);
                 userData.Add(newData);
                 SaveSystem.SaveData<UserData>();
-                break;
-            case CategoryData newData:
-                oldData = categoryData.Find(x => x.id == newData.id);
-                categoryData.Remove((CategoryData) oldData);
-                categoryData.Add(newData);
-                SaveSystem.SaveData<CategoryData>();
                 break;
         }
     }
@@ -161,14 +166,14 @@ public static class Database
 
         switch (t)
         {
-            case UserData _:
-                selectedDataSet = new List<ISaveData>(userData);
-                break;
             case CategoryData _:
                 selectedDataSet = new List<ISaveData>(categoryData);
                 break;
             case SpendData _:
                 selectedDataSet = new List<ISaveData>(spendData);
+                break;
+            case UserData _:
+                selectedDataSet = new List<ISaveData>(userData);
                 break;
             default:
                 return freeId;
