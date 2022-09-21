@@ -12,8 +12,12 @@ public class EditSpendView : EditView<SpendData>
     [SerializeField] private TMP_Dropdown userDropdown;
     [SerializeField] private Button userSplitButton;
     [SerializeField] private Toggle isRecurringToggle;
+    [SerializeField] private RectTransform splitPanel;
 
     private List<SpendData.SplitShare> splitShares = new();
+    private int categoryId => categoriesToDropdownIndex[categoryDropdown.value];
+    private Dictionary<int, int> categoriesToDropdownIndex = new();
+    private Dictionary<int, int> usersToDropdownIndex = new();
 
     private DateTime dateFromInput => new(int.Parse(year.text), int.Parse(month.text), int.Parse(day.text));
 
@@ -24,29 +28,19 @@ public class EditSpendView : EditView<SpendData>
             : 0.00f;
     }
 
+    private void ShowSplits()
+    {
+        splitPanel.gameObject.SetActive(true);
+    }
+
     private void InitializeDropdowns()
     {
-        categoryDropdown.interactable = true;
-        categoryDropdown.options.Clear();
+        categoriesToDropdownIndex =
+            CategoryData.InitializeCategoryDropdown(categoryDropdown,
+                saveData?.categoryId ?? Database.settingsData.defaultCategoryId);
 
-        foreach (var category in Database.categoryData)
-        {
-            categoryDropdown.options.Add(new TMP_Dropdown.OptionData {text = category.name});
-        }
-
-        categoryDropdown.value = saveData?.category ?? Database.DefaultCategory.id;
-        categoryDropdown.RefreshShownValue();
-
-        userDropdown.interactable = true;
-        userDropdown.options.Clear();
-
-        foreach (var user in Database.userData)
-        {
-            userDropdown.options.Add(new TMP_Dropdown.OptionData {text = user.name});
-        }
-
-        userDropdown.value = splitShares[0].userId;
-        userDropdown.RefreshShownValue();
+        usersToDropdownIndex = UserData.InitializeUserDropdown(userDropdown,
+            saveData?.splitShares?[0]?.userId ?? Database.settingsData.defaultUserId);
     }
 
     private void ValidateSpend(string newName)
@@ -54,6 +48,11 @@ public class EditSpendView : EditView<SpendData>
         var zeroSpend = float.Parse(amount.text) <= 0;
 
         confirmChangesButton.interactable = !zeroSpend;
+    }
+
+    private void UpdateUser(int index)
+    {
+        splitShares[0].userId = usersToDropdownIndex[index];
     }
 
     protected override void OnAwake()
@@ -65,36 +64,34 @@ public class EditSpendView : EditView<SpendData>
         day.contentType =
             month.contentType =
                 year.contentType = TMP_InputField.ContentType.IntegerNumber;
-    }
 
-    protected override void OnShow()
-    {
-        base.OnShow();
-
-        InitializeDropdowns();
+        userSplitButton.onClick.AddListener(ShowSplits);
     }
 
     protected override void RefreshView()
     {
+        InitializeDropdowns();
+        
         day.text = saveData?.date.Day.ToString(CultureInfo.InvariantCulture) ?? DateTime.Today.Day.ToString();
         month.text = saveData?.date.Month.ToString(CultureInfo.InvariantCulture) ?? DateTime.Today.Month.ToString();
         year.text = saveData?.date.Year.ToString(CultureInfo.InvariantCulture) ?? DateTime.Today.Year.ToString();
         amount.text = saveData?.amount.ToString(CultureInfo.InvariantCulture);
         description.text = saveData?.description;
+        isRecurringToggle.isOn = saveData?.isRecurring ?? false;
 
-        switch (itemToolOptions)
+        switch (ItemToolOptions)
         {
             case ItemToolOptions.Delete:
                 alertText.text = "Are you sure you wish to permanently delete this Transaction?";
                 confirmChangesButton.interactable = true;
                 break;
             default:
-                confirmChangesButton.interactable = itemToolOptions == ItemToolOptions.Edit;
-                splitShares = new List<SpendData.SplitShare>(saveData?.splitShares ??
-                                                             new[] {SpendData.DefaultSplitShare(saveData?.id ?? 0)});
+                confirmChangesButton.interactable = ItemToolOptions == ItemToolOptions.Edit;
+                splitShares =
+                    new List<SpendData.SplitShare>(saveData?.splitShares ?? new[] {SpendData.DefaultSplitShare()});
 
                 amount.onValueChanged.AddListener(ValidateSpend);
-                userDropdown.onValueChanged.AddListener((x) => splitShares[0].userId = x);
+                userDropdown.onValueChanged.AddListener(UpdateUser);
                 break;
         }
     }
@@ -103,11 +100,11 @@ public class EditSpendView : EditView<SpendData>
     {
         base.ConfirmChanges();
 
-        switch (itemToolOptions)
+        switch (ItemToolOptions)
         {
             case ItemToolOptions.Edit:
                 saveData.date = dateFromInput;
-                saveData.category = categoryDropdown.value;
+                saveData.categoryId = categoryId;
                 saveData.amount = SpendAmount();
                 saveData.description = description.text;
                 saveData.isRecurring = isRecurringToggle.isOn;
@@ -120,7 +117,7 @@ public class EditSpendView : EditView<SpendData>
             case ItemToolOptions.Duplicate:
                 DuplicateItem(new SpendData(Database.GetFreeId<SpendData>(),
                     dateFromInput,
-                    categoryDropdown.value,
+                    categoryId,
                     SpendAmount(),
                     description.text));
 
@@ -128,12 +125,14 @@ public class EditSpendView : EditView<SpendData>
             default:
                 Database.SetNewData(new SpendData(context[0],
                     dateFromInput,
-                    categoryDropdown.value,
+                    categoryId,
                     SpendAmount(),
                     description.text));
 
                 break;
         }
+
+        base.ConfirmChanges();
 
         ViewManager.RefreshView(ViewType.Spend);
     }

@@ -15,7 +15,7 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
 
     protected T saveData { get; private set; }
 
-    protected ItemToolOptions itemToolOptions;
+    protected ItemToolOptions ItemToolOptions;
 
     protected override void OnAwake()
     {
@@ -27,7 +27,7 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
 
     protected abstract void RefreshView();
 
-    protected virtual void ConfirmChanges() // todo - save here
+    protected virtual void ConfirmChanges()
     {
         context ??= new[] {Database.GetFreeId<T>(), 0};
 
@@ -42,6 +42,7 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
     protected virtual void DeleteItem()
     {
         Database.DeleteSaveData<T>(context[0]);
+        saveData.Save();
     }
 
     protected virtual void DuplicateItem(SaveData newSaveData)
@@ -61,12 +62,12 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
         if (context == null)
         {
             saveData = default;
-            itemToolOptions = 0;
+            ItemToolOptions = 0;
         }
         else
         {
-            saveData = (T) Database.GetSaveData<T>(context[0]);
-            itemToolOptions = (ItemToolOptions) context[1];
+            saveData = (T) Database.GetISaveData<T>(context[0]);
+            ItemToolOptions = (ItemToolOptions) context[1];
         }
 
         RefreshView();

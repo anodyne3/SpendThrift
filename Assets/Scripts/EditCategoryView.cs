@@ -7,26 +7,13 @@ public class EditCategoryView : EditView<CategoryData>
     [SerializeField] private TMP_InputField categoryName;
     [SerializeField] private TMP_Dropdown categoryDropdown;
 
-    private int categoryId => categoryDropdown.value - 1;
-
-    private void InitializeDropdown()
-    {
-        categoryDropdown.interactable = true;
-        categoryDropdown.options = new List<TMP_Dropdown.OptionData> {new() {text = "None"}};
-
-        foreach (var category in Database.categoryData)
-        {
-            categoryDropdown.options.Add(new TMP_Dropdown.OptionData {text = category.name});
-        }
-
-        categoryDropdown.value = saveData?.parentCategoryId + 1 ?? 0;
-        categoryDropdown.RefreshShownValue();
-    }
+    private int categoryId => categoriesToDropdownIndex[categoryDropdown.value];
+    private Dictionary<int, int> categoriesToDropdownIndex = new();
 
     private void TestNameChange(string newName)
     {
         var isEmpty = string.IsNullOrEmpty(newName) || string.IsNullOrWhiteSpace(newName);
-        var isValid = itemToolOptions == ItemToolOptions.Edit && newName == saveData?.name ||
+        var isValid = ItemToolOptions == ItemToolOptions.Edit && newName == saveData?.name ||
                       Database.IsUniqueName<CategoryData>(newName);
 
         confirmChangesButton.interactable = !isEmpty && isValid;
@@ -42,9 +29,14 @@ public class EditCategoryView : EditView<CategoryData>
 
     protected override void RefreshView()
     {
-        categoryName.text = saveData?.name;
+        categoryName.text = saveData?.name; //todo - DRY - EditUserView 
 
-        switch (itemToolOptions)
+        categoryName.interactable = ItemToolOptions != ItemToolOptions.Delete;
+        alertText.enabled = ItemToolOptions > 0 && ItemToolOptions != ItemToolOptions.Edit;
+        categoriesToDropdownIndex =
+            CategoryData.InitializeCategoryDropdown(categoryDropdown, saveData?.parentCategoryId ?? 0);
+
+        switch (ItemToolOptions)
         {
             case ItemToolOptions.Delete:
                 alertText.text = "Are you sure you wish to permanently remove this Category?";
@@ -54,8 +46,7 @@ public class EditCategoryView : EditView<CategoryData>
             default:
                 alertText.text = "Please select a unique name for the new Category.";
                 categoryName.onValueChanged.AddListener(TestNameChange);
-                confirmChangesButton.interactable = itemToolOptions == ItemToolOptions.Edit;
-                InitializeDropdown();
+                confirmChangesButton.interactable = ItemToolOptions == ItemToolOptions.Edit;
                 break;
         }
     }
@@ -64,7 +55,7 @@ public class EditCategoryView : EditView<CategoryData>
     {
         base.ConfirmChanges();
 
-        switch (itemToolOptions)
+        switch (ItemToolOptions)
         {
             case ItemToolOptions.Edit:
                 saveData.name = categoryName.text;
@@ -72,6 +63,7 @@ public class EditCategoryView : EditView<CategoryData>
                 saveData.Save();
                 break;
             case ItemToolOptions.Delete:
+                Database.CheckForStrays(saveData);
                 DeleteItem();
                 break;
             case ItemToolOptions.Duplicate:
@@ -88,7 +80,7 @@ public class EditCategoryView : EditView<CategoryData>
     protected override void OnHide()
     {
         base.OnHide();
-        
+
         categoryName.onValueChanged.RemoveListener(TestNameChange);
     }
 

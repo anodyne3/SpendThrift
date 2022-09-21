@@ -8,7 +8,7 @@ public class EditUserView : EditView<UserData>
     private void TestNameChange(string newName)
     {
         var isEmpty = string.IsNullOrEmpty(newName) || string.IsNullOrWhiteSpace(newName);
-        var isValid = itemToolOptions == ItemToolOptions.Edit && newName == saveData?.name ||
+        var isValid = ItemToolOptions == ItemToolOptions.Edit && newName == saveData?.name ||
                       Database.IsUniqueName<UserData>(newName);
 
         confirmChangesButton.interactable = !isEmpty && isValid;
@@ -24,12 +24,12 @@ public class EditUserView : EditView<UserData>
 
     protected override void RefreshView()
     {
-        userName.text = saveData?.name;
+        userName.text = saveData?.name; //todo - DRY - EditCatView 
 
-        userName.interactable = itemToolOptions != ItemToolOptions.Delete;
-        alertText.enabled = itemToolOptions > 0 && itemToolOptions != ItemToolOptions.Edit;
+        userName.interactable = ItemToolOptions != ItemToolOptions.Delete;
+        alertText.enabled = ItemToolOptions > 0 && ItemToolOptions != ItemToolOptions.Edit;
 
-        switch (itemToolOptions)
+        switch (ItemToolOptions)
         {
             case ItemToolOptions.Delete:
                 alertText.text = "Are you sure you wish to permanently remove this User?";
@@ -38,7 +38,7 @@ public class EditUserView : EditView<UserData>
             default:
                 alertText.text = "Please select a unique name for the new User.";
                 userName.onValueChanged.AddListener(TestNameChange);
-                confirmChangesButton.interactable = itemToolOptions == ItemToolOptions.Edit;
+                confirmChangesButton.interactable = ItemToolOptions == ItemToolOptions.Edit;
                 break;
         }
     }
@@ -47,7 +47,7 @@ public class EditUserView : EditView<UserData>
     {
         base.ConfirmChanges();
 
-        switch (itemToolOptions)
+        switch (ItemToolOptions)
         {
             case ItemToolOptions.Edit:
                 saveData.name = userName.text;

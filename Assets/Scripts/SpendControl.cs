@@ -10,9 +10,9 @@ public class SpendControl : ToolsControlItem<SpendData>
     {
         base.Refresh();
 
-        dateText.text = data.date.ToString("ddd dd MMM yy");
+        dateText.text = data.date.ToString("dd MMM yy");
         amountText.text = data.amount.ToString("C", CultureInfo.CurrentCulture);
-        categoryText.text = Database.GetISaveData<CategoryData>(data.category).name;
+        categoryText.text = Database.GetSaveData<CategoryData>(data.categoryId).name;
         descriptionText.text = data.description;
     }
 }

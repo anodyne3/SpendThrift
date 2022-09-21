@@ -1,10 +1,7 @@
-﻿using System.Xml.Linq;
-using System.Xml.Serialization;
-
-
-public interface ISaveData
+﻿public interface ISaveData
 {
     int id { get; }
+    void Save();
 }
 
 public interface ISaveName : ISaveData
@@ -15,7 +12,7 @@ public interface ISaveName : ISaveData
 
 public class SaveData : ISaveData
 {
-    [XmlElement] public int id { get; set; }
+    public int id { get; set; }
 
     public SaveData()
     {
@@ -28,12 +25,6 @@ public class SaveData : ISaveData
     }
 
     public virtual void Save() { }
-
-    public virtual bool TryParse(XElement xElement, out SaveData newSaveData)
-    {
-        newSaveData = null;
-        return false;
-    }
 }
 
 public class SettingsData : SaveData

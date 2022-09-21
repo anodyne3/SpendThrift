@@ -7,8 +7,7 @@ public static class Database
     public static List<UserData> userData { get; private set; } = new();
     public static SettingsData settingsData { get; private set; } = new();
 
-    public static UserData DefaultUser => GetISaveData<UserData>(settingsData.defaultUserId);
-    public static CategoryData DefaultCategory => GetISaveData<CategoryData>(settingsData.defaultCategoryId);
+    private const int UnassignedCategoryId = -2;
 
     public static void LoadData()
     {
@@ -16,9 +15,21 @@ public static class Database
         userData = SaveSystem.LoadData<UserData>();
         categoryData = SaveSystem.LoadData<CategoryData>();
         settingsData = SaveSystem.LoadSettings();
+
+        TryClearUnassignedCategory();
     }
 
-    public static T GetISaveData<T>(int id) where T : SaveData, new()
+    public static void TryClearUnassignedCategory()
+    {
+        if (categoryData.Find(x => x.id == UnassignedCategoryId) is not { } unassignedCategory ||
+            CheckForStrays(unassignedCategory) != 0)
+            return;
+
+        categoryData.Remove(unassignedCategory);
+        SaveSystem.SaveData<CategoryData>();
+    }
+
+    public static T GetSaveData<T>(int id) where T : SaveData, new()
     {
         var t = new T();
 
@@ -35,7 +46,7 @@ public static class Database
         return t;
     }
 
-    public static ISaveData GetSaveData<T>(int id) where T : ISaveData, new()
+    public static ISaveData GetISaveData<T>(int id) where T : ISaveData, new()
     {
         var t = new T();
 
@@ -77,20 +88,17 @@ public static class Database
         {
             case CategoryData _:
                 categoryData.Remove(GetCategoryData(id));
-                SaveSystem.SaveData<CategoryData>();
                 break;
             case SpendData _:
                 spendData.Remove(GetSpendData(id));
-                SaveSystem.SaveData<SpendData>();
                 break;
             case UserData _:
                 userData.Remove(GetUserData(id));
-                SaveSystem.SaveData<UserData>();
                 break;
         }
     }
 
-    public static CategoryData GetCategoryData(int id)
+    private static CategoryData GetCategoryData(int id)
     {
         return categoryData.Find(x => x.id == id);
     }
@@ -103,6 +111,46 @@ public static class Database
     private static UserData GetUserData(int id)
     {
         return userData.Find(x => x.id == id);
+    }
+
+    public static int CheckForStrays<T>(T saveData) where T : SaveData
+    {
+        var strays = new List<SaveData>();
+
+        switch (saveData)
+        {
+            case CategoryData _:
+                foreach (var category in categoryData)
+                    if (category.parentCategoryId == saveData.id)
+                        strays.Add(category);
+
+                break;
+            case SpendData _:
+                foreach (var spend in spendData)
+                    if (spend.categoryId == saveData.id)
+                        strays.Add(spend);
+
+                break;
+        }
+
+        if (strays.Count > 0 && !categoryData.Exists(x => x.id == UnassignedCategoryId))
+            SetNewData(new CategoryData(UnassignedCategoryId, "UnAssigned", -1));
+
+        foreach (var stray in strays)
+        {
+            switch (stray)
+            {
+                case CategoryData strayCategory:
+                    strayCategory.parentCategoryId = UnassignedCategoryId;
+
+                    break;
+                case SpendData straySpend:
+                    straySpend.categoryId = UnassignedCategoryId;
+                    break;
+            }
+        }
+
+        return strays.Count;
     }
 
     public static void SetNewData<T>(int id) where T : new()
@@ -140,21 +188,20 @@ public static class Database
                 oldData = categoryData.Find(x => x.id == newData.id);
                 categoryData.Remove((CategoryData) oldData);
                 categoryData.Add(newData);
-                SaveSystem.SaveData<CategoryData>();
                 break;
             case SpendData newData:
                 oldData = spendData.Find(x => x.id == newData.id);
                 spendData.Remove((SpendData) oldData);
                 spendData.Add(newData);
-                SaveSystem.SaveData<SpendData>();
                 break;
             case UserData newData:
                 oldData = userData.Find(x => x.id == newData.id);
                 userData.Remove((UserData) oldData);
                 userData.Add(newData);
-                SaveSystem.SaveData<UserData>();
                 break;
         }
+
+        saveData.Save();
     }
 
     public static int GetFreeId<T>() where T : ISaveData, new()
@@ -199,10 +246,8 @@ public static class Database
             return true;
 
         foreach (var category in saveData)
-        {
             if (((ISaveName) category).name == newName)
                 return false;
-        }
 
         return true;
     }

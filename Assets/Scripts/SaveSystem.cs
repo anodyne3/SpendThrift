@@ -1,43 +1,40 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Xml.Linq;
-using System.Xml.Serialization;
+using Newtonsoft.Json;
 using UnityEngine;
 
 public static class SaveSystem
 {
     private static readonly string DataPath = Application.persistentDataPath;
-    private static readonly string SpendPath = $"{DataPath}/Spend.xml";
-    private static readonly string UserPath = $"{DataPath}/User.xml";
-    private static readonly string CategoryPath = $"{DataPath}/Category.xml";
-    
+
+    private static readonly string SpendPath = $"{DataPath}/Spend.json";
+    private static readonly string UserPath = $"{DataPath}/User.json";
+    private static readonly string CategoryPath = $"{DataPath}/Category.json";
+
     public const string DefaultCategoryKey = "defaultCategoryKey";
     public const string DefaultUserKey = "defaultUserKey";
 
     public static List<T> LoadData<T>() where T : SaveData, new()
     {
         var path = GetPath<T>();
-        var saveFile = new XDocument();
+
+        var saveData = new List<T>();
 
         if (File.Exists(path))
         {
-            saveFile = XDocument.Load(path);
+            try
+            {
+                var json = File.ReadAllText(path);
+                saveData = JsonConvert.DeserializeObject<List<T>>(json);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
-        var saveData = new List<T>();
-        var root = saveFile.Root;
-
-        if (root == null)
-            return saveData;
-
-        var t = new T();
-        foreach (var element in root.Elements())
-        {
-            if (t.TryParse(element, out var data))
-                saveData.Add((T) data);
-        }
-
-        return saveData;
+        return saveData ?? new List<T>();
     }
 
     public static SettingsData LoadSettings()
@@ -51,16 +48,9 @@ public static class SaveSystem
 
     public static void SaveData<T>() where T : SaveData, new()
     {
-        var saveFile = new XDocument();
         var data = Database.GetData<T>();
-
-        using (var stream = saveFile.CreateWriter())
-        {
-            var xmlSerializer = new XmlSerializer(data.GetType(), new XmlRootAttribute("Root"));
-            xmlSerializer.Serialize(stream, data);
-        }
-
-        saveFile.Save(GetPath<T>());
+        var json = JsonConvert.SerializeObject(data);
+        File.WriteAllText(GetPath<T>(), json);
     }
 
     private static string GetPath<T>() where T : SaveData, new()

@@ -1,7 +1,9 @@
-﻿using System.Xml.Linq;
-using System.Xml.Serialization;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
+using TMPro;
 using UnityEngine;
 
+[JsonObject(MemberSerialization.OptOut)]
 public class UserData : SaveData, ISaveName
 {
     public UserData() : base(-1) { }
@@ -11,20 +13,12 @@ public class UserData : SaveData, ISaveName
         name = newName;
     }
 
-    [XmlElement] public string name { get; set; }
+    public string name { get; set; }
 
     public void SetAsDefault()
     {
+        Database.settingsData.defaultUserId = id;
         PlayerPrefs.SetInt(SaveSystem.DefaultUserKey, id);
-    }
-    
-    public override bool TryParse(XElement xElement, out SaveData newSaveData)
-    {
-        if (!int.TryParse(xElement.Element("id")?.Value, out var saveId))
-            return base.TryParse(xElement, out newSaveData);
-
-        newSaveData = new UserData(saveId, xElement.Element("name")?.Value);
-        return true;
     }
 
     public override void Save()
@@ -32,5 +26,28 @@ public class UserData : SaveData, ISaveName
         base.Save();
 
         SaveSystem.SaveData<UserData>();
+    }
+
+    //todo - only initialize on change to userData - abstraction? 
+    public static Dictionary<int, int> InitializeUserDropdown(TMP_Dropdown userDropdown, int userId)
+    {
+        userDropdown.interactable = true;
+        var usersToDropdownIndex = new Dictionary<int, int>();
+        userDropdown.options.Clear();
+
+        foreach (var user in Database.userData)
+        {
+            usersToDropdownIndex.Add(userDropdown.options.Count, user.id);
+            userDropdown.options.Add(new TMP_Dropdown.OptionData {text = user.name});
+        }
+
+        userDropdown.value = 0;
+        foreach (var kvp in usersToDropdownIndex)
+            if (kvp.Value == userId)
+                userDropdown.value = kvp.Key;
+
+        userDropdown.RefreshShownValue();
+
+        return usersToDropdownIndex;
     }
 }
