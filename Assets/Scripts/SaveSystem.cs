@@ -48,7 +48,7 @@ public static class SaveSystem
 
     public static void SaveData<T>() where T : SaveData, new()
     {
-        var data = Database.GetData<T>();
+        var data = Database.GetDataList<T>();
         var json = JsonConvert.SerializeObject(data);
         File.WriteAllText(GetPath<T>(), json);
     }

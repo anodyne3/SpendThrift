@@ -63,7 +63,7 @@ public static class Database
         return t as SaveData;
     }
 
-    public static List<T> GetData<T>() where T : SaveData, new()
+    public static List<T> GetDataList<T>() where T : SaveData, new()
     {
         var t = new T();
 
@@ -241,7 +241,7 @@ public static class Database
 
     public static bool IsUniqueName<T>(string newName) where T : SaveData, new()
     {
-        var saveData = GetData<T>();
+        var saveData = GetDataList<T>();
         if (saveData == null)
             return true;
 

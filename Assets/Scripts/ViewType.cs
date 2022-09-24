@@ -9,4 +9,5 @@
     EditSpend,
     Category,
     EditCategory,
+    EditSplitShares
 }

@@ -44,8 +44,11 @@ public class ViewManager : MonoBehaviour
 
     public static void RefreshView(ViewType viewType)
     {
-        if (GetView(viewType) is IRefreshControls view)
-            view.RefreshControls();
+        if (GetView(viewType) is IRefreshControls refreshControls)
+            refreshControls.RefreshControls();
+        
+        if (GetView(viewType) is IRefreshView refreshView)
+            refreshView.RefreshView();
     }
 
     private static View GetView(ViewType viewType)

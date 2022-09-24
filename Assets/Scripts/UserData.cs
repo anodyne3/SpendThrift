@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json;
-using TMPro;
+﻿using Newtonsoft.Json;
 using UnityEngine;
 
 [JsonObject(MemberSerialization.OptOut)]
@@ -26,28 +24,5 @@ public class UserData : SaveData, ISaveName
         base.Save();
 
         SaveSystem.SaveData<UserData>();
-    }
-
-    //todo - only initialize on change to userData - abstraction? 
-    public static Dictionary<int, int> InitializeUserDropdown(TMP_Dropdown userDropdown, int userId)
-    {
-        userDropdown.interactable = true;
-        var usersToDropdownIndex = new Dictionary<int, int>();
-        userDropdown.options.Clear();
-
-        foreach (var user in Database.userData)
-        {
-            usersToDropdownIndex.Add(userDropdown.options.Count, user.id);
-            userDropdown.options.Add(new TMP_Dropdown.OptionData {text = user.name});
-        }
-
-        userDropdown.value = 0;
-        foreach (var kvp in usersToDropdownIndex)
-            if (kvp.Value == userId)
-                userDropdown.value = kvp.Key;
-
-        userDropdown.RefreshShownValue();
-
-        return usersToDropdownIndex;
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public interface IRefreshControls
 {
-    public abstract void RefreshControls();
+    public void RefreshControls();
 }
 
 public abstract class SubView<T> : View, IRefreshControls where T : SaveData, new()
@@ -13,21 +13,14 @@ public abstract class SubView<T> : View, IRefreshControls where T : SaveData, ne
     [SerializeField] private NewControl<T> newControlPrefab;
     [SerializeField] private ItemToolOptions dropdownOptions;
 
-    private readonly List<ToolsControlItem<T>> controls = new List<ToolsControlItem<T>>();
+    private readonly List<ToolsControlItem<T>> controls = new();
 
     protected override void OnAwake()
     {
         base.OnAwake();
 
-        Initialize(Database.GetData<T>());
-    }
-
-    public void Initialize(List<T> saveData)
-    {
-        base.OnAwake();
-
         Instantiate(newControlPrefab, controlList);
-        GenerateControls(saveData);
+        GenerateControls();
     }
 
     public virtual void RefreshControls()
@@ -38,11 +31,13 @@ public abstract class SubView<T> : View, IRefreshControls where T : SaveData, ne
         }
 
         controls.Clear();
-        GenerateControls(Database.GetData<T>());
+        GenerateControls();
     }
 
-    protected virtual void GenerateControls(List<T> saveData)
+    private void GenerateControls()
     {
+        var saveData = Database.GetDataList<T>();
+
         if (saveData == null)
             return;
 

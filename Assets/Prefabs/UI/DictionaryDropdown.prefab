@@ -844,7 +844,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: None
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -924,9 +924,9 @@ GameObject:
   - component: {fileID: 1059935606158244140}
   - component: {fileID: 6107932865132148148}
   - component: {fileID: 4727107306937831114}
-  - component: {fileID: 3224834513074419422}
+  - component: {fileID: 1049864481280413644}
   m_Layer: 0
-  m_Name: CategoryDropdown
+  m_Name: DictionaryDropdown
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -993,7 +993,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 0.5
---- !u!114 &3224834513074419422
+--- !u!114 &1049864481280413644
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1002,7 +1002,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5467034786422891772}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b743370ac3e4ec2a1668f5455a8ef8a, type: 3}
+  m_Script: {fileID: 11500000, guid: f2125be5837c4b46805a6e2e55d99c65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:

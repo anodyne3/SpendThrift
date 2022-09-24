@@ -13,7 +13,7 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
     [SerializeField] protected Button confirmChangesButton;
     [SerializeField] protected TextMeshProUGUI alertText;
 
-    protected T saveData { get; private set; }
+    protected T saveData { get; set; }
 
     protected ItemToolOptions ItemToolOptions;
 
@@ -29,8 +29,6 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
 
     protected virtual void ConfirmChanges()
     {
-        context ??= new[] {Database.GetFreeId<T>(), 0};
-
         Hide();
     }
 
@@ -62,6 +60,7 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
         if (context == null)
         {
             saveData = default;
+            context ??= new[] {Database.GetFreeId<T>(), 0};
             ItemToolOptions = 0;
         }
         else

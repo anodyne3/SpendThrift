@@ -24,7 +24,12 @@ public class ItemToolDropdown : TMP_Dropdown
         }
 
         SetValueWithoutNotify(-1);
-        onValueChanged.AddListener((x) => optionSelected.Invoke(itemOptionsToDropdownIndex[x]));
+        onValueChanged.AddListener(OptionSelected);
+    }
+
+    private void OptionSelected(int optionIndex)
+    {
+        optionSelected.Invoke(itemOptionsToDropdownIndex[optionIndex]);
     }
 
     #region Overrides
@@ -33,6 +38,13 @@ public class ItemToolDropdown : TMP_Dropdown
     {
         base.DestroyDropdownList(dropdownList);
         SetValueWithoutNotify(-1);
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        onValueChanged.RemoveListener(OptionSelected);
     }
 
     #endregion

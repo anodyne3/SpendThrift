@@ -1,14 +1,10 @@
-﻿using System.Collections.Generic;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 
 public class EditCategoryView : EditView<CategoryData>
 {
     [SerializeField] private TMP_InputField categoryName;
-    [SerializeField] private TMP_Dropdown categoryDropdown;
-
-    private int categoryId => categoriesToDropdownIndex[categoryDropdown.value];
-    private Dictionary<int, int> categoriesToDropdownIndex = new();
+    [SerializeField] private DictionaryDropdown categoryDropdown;
 
     private void TestNameChange(string newName)
     {
@@ -33,8 +29,10 @@ public class EditCategoryView : EditView<CategoryData>
 
         categoryName.interactable = ItemToolOptions != ItemToolOptions.Delete;
         alertText.enabled = ItemToolOptions > 0 && ItemToolOptions != ItemToolOptions.Edit;
-        categoriesToDropdownIndex =
-            CategoryData.InitializeCategoryDropdown(categoryDropdown, saveData?.parentCategoryId ?? 0);
+
+        categoryDropdown.InitializeDropdown(Database.categoryData, saveData?.id ?? -99);
+        categoryDropdown.InsertOption(0, "None", -1);
+        categoryDropdown.ShowOptionById(saveData?.parentCategoryId ?? -1);
 
         switch (ItemToolOptions)
         {
@@ -59,7 +57,7 @@ public class EditCategoryView : EditView<CategoryData>
         {
             case ItemToolOptions.Edit:
                 saveData.name = categoryName.text;
-                saveData.parentCategoryId = categoryId;
+                saveData.parentCategoryId = categoryDropdown.optionId;
                 saveData.Save();
                 break;
             case ItemToolOptions.Delete:
@@ -67,10 +65,13 @@ public class EditCategoryView : EditView<CategoryData>
                 DeleteItem();
                 break;
             case ItemToolOptions.Duplicate:
-                DuplicateItem(new CategoryData(Database.GetFreeId<CategoryData>(), categoryName.text, categoryId));
+                DuplicateItem(new CategoryData(Database.GetFreeId<CategoryData>(),
+                    categoryName.text,
+                    categoryDropdown.optionId));
+
                 break;
             default:
-                Database.SetNewData(new CategoryData(context[0], categoryName.text, categoryId));
+                Database.SetNewData(new CategoryData(context[0], categoryName.text, categoryDropdown.optionId));
                 break;
         }
 

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public abstract class ControlItem<T> : MonoBehaviour where T : SaveData
+public abstract class ControlItem<T> : MonoBehaviour
 {
     protected T data { get; private set; }
 
@@ -21,7 +21,7 @@ public abstract class ToolsControlItem<T> : ControlItem<T> where T : SaveData, n
 
     public void Initialize(ItemToolOptions itemToolOptions)
     {
-        if (!(GetComponentInChildren(typeof(ItemToolDropdown)) is ItemToolDropdown anItemToolDropdown))
+        if (GetComponentInChildren(typeof(ItemToolDropdown)) is not ItemToolDropdown anItemToolDropdown)
             return;
 
         itemToolDropdown = anItemToolDropdown;
@@ -54,18 +54,19 @@ public abstract class ToolsControlItem<T> : ControlItem<T> where T : SaveData, n
     }
 
     protected override void Refresh() { }
+
+    private void OnDestroy() => itemToolDropdown.optionSelected.RemoveListener(ShowView);
 }
 
-public abstract class NewControl<T> : ControlItem<T> where T : SaveData
+public abstract class NewControl<T> : ControlItem<T>
 {
     [SerializeField] private Button addItemButton;
 
-    private void Awake()
-    {
-        addItemButton.onClick.AddListener(ShowNewItemPanel);
-    }
+    private void Awake() => addItemButton.onClick.AddListener(ShowNewItemPanel);
 
     protected abstract void ShowNewItemPanel();
 
     protected override void Refresh() { }
+
+    private void OnDestroy() => addItemButton.onClick.RemoveListener(ShowNewItemPanel);
 }
