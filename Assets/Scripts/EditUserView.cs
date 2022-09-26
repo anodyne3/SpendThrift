@@ -5,74 +5,58 @@ public class EditUserView : EditView<UserData>
 {
     [SerializeField] private TMP_InputField userName;
 
-    private void TestNameChange(string newName)
+    protected override void Awake()
     {
-        var isEmpty = string.IsNullOrEmpty(newName) || string.IsNullOrWhiteSpace(newName);
-        var isValid = ItemToolOptions == ItemToolOptions.Edit && newName == saveData?.name ||
-                      Database.IsUniqueName<UserData>(newName);
-
-        confirmChangesButton.interactable = !isEmpty && isValid;
-        alertText.enabled = !isValid;
-    }
-
-    protected override void OnAwake()
-    {
-        base.OnAwake();
+        base.Awake();
 
         userName.contentType = TMP_InputField.ContentType.Name;
+        userName.onValueChanged.AddListener(TestNameChange);
+
+        dataTypeName = "User";
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        userName.onValueChanged.RemoveListener(TestNameChange);
     }
 
     protected override void RefreshView()
     {
-        userName.text = saveData?.name; //todo - DRY - EditCatView 
+        RefreshName(SaveData, userName);
+        RefreshAlertMessage(itemToolOptions > 0 && itemToolOptions != ItemToolOptions.Edit);
 
-        userName.interactable = ItemToolOptions != ItemToolOptions.Delete;
-        alertText.enabled = ItemToolOptions > 0 && ItemToolOptions != ItemToolOptions.Edit;
-
-        switch (ItemToolOptions)
-        {
-            case ItemToolOptions.Delete:
-                alertText.text = "Are you sure you wish to permanently remove this User?";
-                confirmChangesButton.interactable = true;
-                break;
-            default:
-                alertText.text = "Please select a unique name for the new User.";
-                userName.onValueChanged.AddListener(TestNameChange);
-                confirmChangesButton.interactable = ItemToolOptions == ItemToolOptions.Edit;
-                break;
-        }
+        confirmChangesButton.interactable = itemToolOptions is ItemToolOptions.Delete or ItemToolOptions.Edit;
     }
 
     protected override void ConfirmChanges()
     {
         base.ConfirmChanges();
 
-        switch (ItemToolOptions)
+        switch (itemToolOptions)
         {
-            case ItemToolOptions.Edit:
-                saveData.name = userName.text;
-                saveData.Save();
-                break;
+            case ItemToolOptions.Default:
+                return;
             case ItemToolOptions.Delete:
+                if (Database.SettingsData.DefaultUserId == SaveData?.ID)
+                    Database.SettingsData.DefaultUserId = 0;
+
                 DeleteItem();
                 break;
             case ItemToolOptions.Duplicate:
-                DuplicateItem(new UserData(Database.GetFreeId<UserData>(), userName.text));
+                DuplicateItem(new UserData(SaveData.GetFreeId(), userName.text));
                 break;
             default:
-                Database.SetNewData(new UserData(context[0], userName.text));
+            case ItemToolOptions.Edit:
+                SaveData.Name = userName.text;
+                SaveData.Save();
                 break;
         }
-        
+
         ViewManager.RefreshView(ViewType.User);
     }
 
-    protected override void OnHide()
-    {
-        base.OnHide();
 
-        userName.onValueChanged.RemoveListener(TestNameChange);
-    }
-
-    public override ViewType GetViewType() => ViewType.EditUser;
+    protected override ViewType GetViewType() => ViewType.EditUser;
 }

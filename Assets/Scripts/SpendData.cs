@@ -11,33 +11,34 @@ public class SpendData : SaveData
     public SpendData(int newId, DateTime newDate, int newCategory, float newAmount, string newDescription,
         List<SplitShare> newSplitShares) : base(newId)
     {
-        date = newDate;
-        categoryId = newCategory;
-        amount = newAmount;
-        description = newDescription;
-        splitShares = newSplitShares;
+        Date = newDate;
+        CategoryId = newCategory;
+        Amount = newAmount;
+        Description = newDescription;
+        SplitShares = newSplitShares;
     }
 
-    public DateTime date { get; set; }
-    public int categoryId { get; set; }
-    public float amount { get; set; }
-    public string description { get; set; }
-    public List<SplitShare> splitShares { get; set; } = new();
-    public bool isRecurring { get; set; }
+    public DateTime Date { get; set; } = DateTime.UtcNow;
+    public int CategoryId { get; set; } = Database.SettingsData.DefaultCategoryId;
 
-    public override void Save()
+    public float Amount
     {
-        base.Save();
-
-        SaveSystem.SaveData<SpendData>();
+        get => amount;
+        set => amount = value;
     }
+
+    private float amount;
+
+    public string Description { get; set; }
+    public List<SplitShare> SplitShares { get; set; } = new();
+    public bool IsRecurring { get; set; }
 
     public bool CanAddUser(out UserData userData)
     {
         userData = null;
-        
-        foreach (var user in Database.userData)
-            if (splitShares.Find(x => x.userId == user.id) is null)
+
+        foreach (var user in Database.UserData)
+            if (SplitShares.Find(x => x.UserId == user.ID) is null)
             {
                 userData = user;
                 return true;
@@ -46,53 +47,40 @@ public class SpendData : SaveData
         return false;
     }
 
-    public void AddSplitShare(int addedUserId)
+    public override void Save()
     {
-        splitShares.Add(new SplitShare(addedUserId) {LiabilitySplit = UpdateLiabilitySplits(), PaymentSplit = 0f});
-        Save();
-        ViewManager.RefreshView(ViewType.EditSplitShares);
+        base.Save();
 
-        float UpdateLiabilitySplits()
-        {
-            var newLiability = 0f;
+        SaveSystem.SaveData<SpendData>();
+    }
+}
 
-            foreach (var splitShare in splitShares)
-            {
-                splitShare.LiabilitySplit -= newLiability += splitShare.LiabilitySplit / (splitShares.Count + 1);
-            }
-
-            return newLiability;
-        }
+[Serializable]
+public class SplitShare
+{
+    public SplitShare(int newUserId)
+    {
+        UserId = newUserId;
     }
 
+    public int UserId { get; set; }
 
-    [Serializable]
-    public class SplitShare
+    public float PaymentSplit
     {
-        public SplitShare(int newUserId)
-        {
-            userId = newUserId;
-        }
-
-        public int userId { get; set; }
-
-        public float PaymentSplit
-        {
-            get => paymentSplit;
-            set => paymentSplit = Mathf.Clamp(value, 0.0f, 1.0f);
-        }
-
-        public float LiabilitySplit
-        {
-            get => liabilitySplit;
-            set => liabilitySplit = Mathf.Clamp(value, 0.0f, 1.0f);
-        }
-
-        private float liabilitySplit = 1.0f, paymentSplit = 1.0f;
+        get => paymentSplit;
+        set => paymentSplit = Mathf.Clamp(value, 0.0f, 1.0f);
     }
+
+    public float LiabilitySplit
+    {
+        get => liabilitySplit;
+        set => liabilitySplit = Mathf.Clamp(value, 0.0f, 1.0f);
+    }
+
+    private float liabilitySplit = 1.0f, paymentSplit = 1.0f;
 
     public static SplitShare DefaultSplitShare()
     {
-        return new SplitShare(Database.settingsData.defaultUserId);
+        return new SplitShare(Database.SettingsData.DefaultUserId);
     }
 }

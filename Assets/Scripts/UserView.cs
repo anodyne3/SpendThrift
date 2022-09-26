@@ -1,4 +1,4 @@
 ﻿public class UserView : SubView<UserData>
 {
-    public override ViewType GetViewType() => ViewType.User;
+    protected override ViewType GetViewType() => ViewType.User;
 }

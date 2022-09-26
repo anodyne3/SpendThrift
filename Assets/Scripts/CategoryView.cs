@@ -3,9 +3,9 @@
     public override void RefreshControls()
     {
         Database.TryClearUnassignedCategory();
-        
+
         base.RefreshControls();
     }
 
-    public override ViewType GetViewType() => ViewType.Category;
+    protected override ViewType GetViewType() => ViewType.Category;
 }

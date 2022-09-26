@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-public class SplitControl : ControlItem<SpendData.SplitShare>
+public class SplitControl : ControlItem<SplitShare>
 {
-    public UnityAction<SpendData.SplitShare> removeSplit;
-    
+    public UnityAction<SplitShare> removeSplit;
+
     [SerializeField] private DictionaryDropdown userDropdown;
     [SerializeField] private TMP_InputField liability, payment;
     [SerializeField] private Button removeUser;
@@ -17,49 +17,43 @@ public class SplitControl : ControlItem<SpendData.SplitShare>
     private void Awake()
     {
         liability.contentType = payment.contentType = TMP_InputField.ContentType.DecimalNumber;
-    }
 
-    public void RefreshSliders(float newSpendAmount)
-    {
-        spendAmount = newSpendAmount;
-        
-        liability.text = ClampedSpend(data.LiabilitySplit * spendAmount).ToString("C");
-        payment.text = ClampedSpend(data.PaymentSplit * spendAmount).ToString("C");
-    }
-
-    private float ClampedSpend(float newAmount)
-    {
-        return Mathf.Clamp(newAmount, 0.0f, spendAmount);
-    }
-    
-    protected override void Refresh()
-    {
-        var isSplit = removeSplit != null;
-        
-        userDropdown.InitializeDropdown(Database.userData/*, data.userId*/); // should hide the ones already in the list of splitShares
-        userDropdown.ShowOptionById(data.userId);
         userDropdown.onValueChanged.AddListener(AssignUser);
-
-        removeUser.onClick.AddListener(RemoveUser);
-        removeUser.interactable = isSplit;
-        
         liability.onEndEdit.AddListener(UpdateLiability);
         payment.onEndEdit.AddListener(UpdatePayment);
+        removeUser.onClick.AddListener(RemoveUser);
+    }
+
+    private void OnDestroy()
+    {
+        userDropdown.onValueChanged.RemoveListener(AssignUser);
+        liability.onEndEdit.RemoveListener(UpdateLiability);
+        payment.onEndEdit.RemoveListener(UpdatePayment);
+        removeUser.onClick.RemoveListener(RemoveUser);
     }
 
     private void AssignUser(int id)
     {
-        data.userId = userDropdown.optionId;
+        // if (Data.UserId exists in the splitShares) swap them
+
+        Data.UserId = userDropdown.OptionId;
     }
 
     private void UpdateLiability(string liabilityText)
     {
-        data.LiabilitySplit = ParseAndClamp(liabilityText);
+        Data.LiabilitySplit = ParseAndClamp(liabilityText);
+        liability.SetTextWithoutNotify((Data.LiabilitySplit * spendAmount).ToString("C", CultureInfo.CurrentCulture));
     }
 
     private void UpdatePayment(string paymentText)
     {
-        data.PaymentSplit = ParseAndClamp(paymentText);
+        Data.PaymentSplit = ParseAndClamp(paymentText);
+        payment.SetTextWithoutNotify((Data.PaymentSplit * spendAmount).ToString("C", CultureInfo.CurrentCulture));
+    }
+
+    private void RemoveUser()
+    {
+        removeSplit?.Invoke(Data);
     }
 
     private float ParseAndClamp(string newAmountText)
@@ -70,14 +64,29 @@ public class SplitControl : ControlItem<SpendData.SplitShare>
         return 0;
     }
 
-    private void RemoveUser()
+    private float ClampedSpend(float newAmount)
     {
-        removeSplit?.Invoke(data);
+        return Mathf.Clamp(newAmount, 0.0f, spendAmount);
     }
 
-    private void OnDestroy()
+    public void RefreshSplits(float newSpendAmount)
     {
-        userDropdown.onValueChanged.RemoveListener(_ => data.userId = userDropdown.optionId);
-        removeUser.onClick.RemoveListener(RemoveUser);
+        spendAmount = newSpendAmount;
+
+        liability.SetTextWithoutNotify( /*ClampedSpend*/
+            (Data.LiabilitySplit * spendAmount).ToString("C", CultureInfo.CurrentCulture));
+
+        payment.SetTextWithoutNotify( /*ClampedSpend*/
+            (Data.PaymentSplit * spendAmount).ToString("C", CultureInfo.CurrentCulture));
+    }
+
+    protected override void Refresh()
+    {
+        var isSplit = removeSplit != null;
+
+        userDropdown.InitializeDropdown(Database.UserData);
+        userDropdown.ShowOptionById(Data.UserId);
+
+        removeUser.interactable = isSplit;
     }
 }

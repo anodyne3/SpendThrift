@@ -3,29 +3,28 @@ using TMPro;
 
 public class DictionaryDropdown : TMP_Dropdown
 {
-    public int optionId => dataToDropdownIndex[value];
+    public int OptionId => dataToDropdownIndex[value];
 
     private Dictionary<int, int> dataToDropdownIndex = new();
 
-    public void InitializeDropdown(IEnumerable<ISaveName> saveData, int hideSelfId = -99)
+    public void InitializeDropdown(IEnumerable<ISaveName> saveData, List<int> hideIds = null)
     {
-        interactable = true;
         ClearOptions();
 
         foreach (var data in saveData)
         {
-            if (data.id == hideSelfId)
+            if (hideIds != null && hideIds.Contains(data.ID))
                 continue;
 
-            dataToDropdownIndex.Add(options.Count, data.id);
-            options.Add(new OptionData {text = data.name});
+            dataToDropdownIndex.Add(options.Count, data.ID);
+            options.Add(new OptionData {text = data.Name});
         }
     }
 
     public void InsertOption(int index, string text, int id)
     {
         index = index > options.Count ? options.Count : index;
-        
+
         options.Insert(index, new OptionData(text));
         var tempDataToDropdownIndex = new Dictionary<int, int>();
 

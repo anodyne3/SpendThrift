@@ -1,11 +1,13 @@
-﻿using System;
+﻿//unused tool
+
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public class Sounds<T> : MonoBehaviour where T : Enum
 {
-    [SerializeField] protected MinigameAudioClip<T>[] clips;
+    [SerializeField] protected SoundsClip<T>[] clips;
 
     private AudioSource audioManager;
 
@@ -13,22 +15,22 @@ public class Sounds<T> : MonoBehaviour where T : Enum
     {
         audioManager = FindObjectOfType<AudioSource>();
 
-        clips ??= new MinigameAudioClip<T>[0];
+        clips ??= Array.Empty<SoundsClip<T>>();
     }
 
     public void AddClips(T clipType, AudioClip[] newClips)
     {
-        clips = new List<MinigameAudioClip<T>>(clips) {new MinigameAudioClip<T>(clipType, newClips)}.ToArray();
+        clips = new List<SoundsClip<T>>(clips) {new(clipType, newClips)}.ToArray();
     }
 
-    public void AddClip(MinigameAudioClip<T> newClip)
+    public void AddClip(SoundsClip<T> newClip)
     {
-        clips = new List<MinigameAudioClip<T>>(clips) {newClip}.ToArray();
+        clips = new List<SoundsClip<T>>(clips) {newClip}.ToArray();
     }
 
-    public void AddClips(IEnumerable<MinigameAudioClip<T>> newClips)
+    public void AddClips(IEnumerable<SoundsClip<T>> newClips)
     {
-        var clipsList = new List<MinigameAudioClip<T>>(clips);
+        var clipsList = new List<SoundsClip<T>>(clips);
         clipsList.AddRange(newClips);
         clips = clipsList.ToArray();
     }
@@ -43,18 +45,18 @@ public class Sounds<T> : MonoBehaviour where T : Enum
             if (!Equals(clip.ClipType, clipType))
                 continue;
 
-            audioManager.PlayOneShot(clip.Clip/*, position*/);
+            audioManager.PlayOneShot(clip.Clip /*, position*/);
             break;
         }
     }
 }
 
 [Serializable]
-public class MinigameAudioClip<T> where T : Enum
+public class SoundsClip<T> where T : Enum
 {
-    public MinigameAudioClip() { }
+    public SoundsClip() { }
 
-    public MinigameAudioClip(T newClipType, AudioClip[] newClips)
+    public SoundsClip(T newClipType, AudioClip[] newClips)
     {
         clipType = newClipType;
         clips = newClips;

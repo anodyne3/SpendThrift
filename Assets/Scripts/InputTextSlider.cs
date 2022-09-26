@@ -1,4 +1,5 @@
 ﻿// Unused Tool
+
 using System.Globalization;
 using TMPro;
 using UnityEditor;
@@ -26,6 +27,14 @@ public class InputTextSlider : Slider
         onValueChanged.AddListener(UpdateInputField);
     }
 
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        inputField.onValueChanged.RemoveListener(UpdateSlider);
+        onValueChanged.RemoveListener(UpdateInputField);
+    }
+
     protected virtual void UpdateSlider(string inputFieldText)
     {
         if (float.TryParse(inputFieldText, NumberStyles.Float, CultureInfo.CurrentCulture, out var inputFieldFloat))
@@ -41,6 +50,7 @@ public class InputTextSlider : Slider
     }
 }
 
+#if UNITY_EDITOR
 [CustomEditor(typeof(InputTextSlider))]
 public class InputTextSliderEditor : SliderEditor
 {
@@ -62,3 +72,4 @@ public class InputTextSliderEditor : SliderEditor
         base.OnInspectorGUI();
     }
 }
+#endif

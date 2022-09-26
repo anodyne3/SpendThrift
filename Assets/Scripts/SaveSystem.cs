@@ -15,35 +15,35 @@ public static class SaveSystem
     public const string DefaultCategoryKey = "defaultCategoryKey";
     public const string DefaultUserKey = "defaultUserKey";
 
+    public static SettingsData LoadSettings()
+    {
+        return new SettingsData
+        {
+            DefaultUserId = PlayerPrefs.GetInt(DefaultUserKey, 0),
+            DefaultCategoryId = PlayerPrefs.GetInt(DefaultCategoryKey, 0)
+        };
+    }
+
     public static List<T> LoadData<T>() where T : SaveData, new()
     {
         var path = GetPath<T>();
 
         var saveData = new List<T>();
 
-        if (File.Exists(path))
+        if (!File.Exists(path))
+            return saveData;
+
+        try
         {
-            try
-            {
-                var json = File.ReadAllText(path);
-                saveData = JsonConvert.DeserializeObject<List<T>>(json);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+            var json = File.ReadAllText(path);
+            saveData = JsonConvert.DeserializeObject<List<T>>(json);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
 
         return saveData ?? new List<T>();
-    }
-
-    public static SettingsData LoadSettings()
-    {
-        return new SettingsData
-        {
-            defaultUserId = PlayerPrefs.GetInt(DefaultUserKey, 0),
-            defaultCategoryId = PlayerPrefs.GetInt(DefaultCategoryKey, 0)
-        };
     }
 
     public static void SaveData<T>() where T : SaveData, new()

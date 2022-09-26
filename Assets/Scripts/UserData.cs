@@ -8,15 +8,15 @@ public class UserData : SaveData, ISaveName
 
     public UserData(int newId, string newName) : base(newId)
     {
-        name = newName;
+        Name = newName;
     }
 
-    public string name { get; set; }
+    public string Name { get; set; }
 
     public void SetAsDefault()
     {
-        Database.settingsData.defaultUserId = id;
-        PlayerPrefs.SetInt(SaveSystem.DefaultUserKey, id);
+        Database.SettingsData.DefaultUserId = ID;
+        PlayerPrefs.SetInt(SaveSystem.DefaultUserKey, ID);
     }
 
     public override void Save()

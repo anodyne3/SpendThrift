@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class EditCategoryView : EditView<CategoryData>
@@ -6,84 +7,68 @@ public class EditCategoryView : EditView<CategoryData>
     [SerializeField] private TMP_InputField categoryName;
     [SerializeField] private DictionaryDropdown categoryDropdown;
 
-    private void TestNameChange(string newName)
+    protected override void Awake()
     {
-        var isEmpty = string.IsNullOrEmpty(newName) || string.IsNullOrWhiteSpace(newName);
-        var isValid = ItemToolOptions == ItemToolOptions.Edit && newName == saveData?.name ||
-                      Database.IsUniqueName<CategoryData>(newName);
-
-        confirmChangesButton.interactable = !isEmpty && isValid;
-        alertText.enabled = !isValid;
-    }
-
-    protected override void OnAwake()
-    {
-        base.OnAwake();
+        base.Awake();
 
         categoryName.contentType = TMP_InputField.ContentType.Name;
+        categoryName.onValueChanged.AddListener(TestNameChange);
+
+        dataTypeName = "Category";
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        categoryName.onValueChanged.RemoveListener(TestNameChange);
     }
 
     protected override void RefreshView()
     {
-        categoryName.text = saveData?.name; //todo - DRY - EditUserView 
+        RefreshName(SaveData, categoryName);
+        RefreshAlertMessage(itemToolOptions > 0 && itemToolOptions != ItemToolOptions.Edit);
 
-        categoryName.interactable = ItemToolOptions != ItemToolOptions.Delete;
-        alertText.enabled = ItemToolOptions > 0 && ItemToolOptions != ItemToolOptions.Edit;
-
-        categoryDropdown.InitializeDropdown(Database.categoryData, saveData?.id ?? -99);
+        categoryDropdown.InitializeDropdown(Database.CategoryData,
+            new List<int> {SaveData.ID, Database.UnassignedCategoryId});
         categoryDropdown.InsertOption(0, "None", -1);
-        categoryDropdown.ShowOptionById(saveData?.parentCategoryId ?? -1);
+        categoryDropdown.ShowOptionById(SaveData?.ParentCategoryId ?? -1);
 
-        switch (ItemToolOptions)
-        {
-            case ItemToolOptions.Delete:
-                alertText.text = "Are you sure you wish to permanently remove this Category?";
-                confirmChangesButton.interactable = true;
-                categoryDropdown.interactable = false;
-                break;
-            default:
-                alertText.text = "Please select a unique name for the new Category.";
-                categoryName.onValueChanged.AddListener(TestNameChange);
-                confirmChangesButton.interactable = ItemToolOptions == ItemToolOptions.Edit;
-                break;
-        }
+        confirmChangesButton.interactable = itemToolOptions is ItemToolOptions.Delete or ItemToolOptions.Edit;
+        categoryDropdown.interactable = itemToolOptions != ItemToolOptions.Delete;
     }
 
     protected override void ConfirmChanges()
     {
         base.ConfirmChanges();
 
-        switch (ItemToolOptions)
+        switch (itemToolOptions)
         {
+            case ItemToolOptions.Default:
+                return;
+            default:
             case ItemToolOptions.Edit:
-                saveData.name = categoryName.text;
-                saveData.parentCategoryId = categoryDropdown.optionId;
-                saveData.Save();
+                SaveData.Name = categoryName.text;
+                SaveData.ParentCategoryId = categoryDropdown.OptionId;
+                SaveData.Save();
                 break;
             case ItemToolOptions.Delete:
-                Database.CheckForStrays(saveData);
+                if (Database.SettingsData.DefaultCategoryId == SaveData.ID)
+                    Database.SettingsData.DefaultCategoryId = 0;
+
+                Database.CheckForStrays(SaveData);
                 DeleteItem();
                 break;
             case ItemToolOptions.Duplicate:
-                DuplicateItem(new CategoryData(Database.GetFreeId<CategoryData>(),
+                DuplicateItem(new CategoryData(SaveData.GetFreeId(),
                     categoryName.text,
-                    categoryDropdown.optionId));
+                    categoryDropdown.OptionId));
 
-                break;
-            default:
-                Database.SetNewData(new CategoryData(context[0], categoryName.text, categoryDropdown.optionId));
                 break;
         }
 
         ViewManager.RefreshView(ViewType.Category);
     }
 
-    protected override void OnHide()
-    {
-        base.OnHide();
-
-        categoryName.onValueChanged.RemoveListener(TestNameChange);
-    }
-
-    public override ViewType GetViewType() => ViewType.EditCategory;
+    protected override ViewType GetViewType() => ViewType.EditCategory;
 }

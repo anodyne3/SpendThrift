@@ -1,27 +1,26 @@
 ﻿public interface ISaveData
 {
-    int id { get; }
+    int ID { get; set; }
     void Save();
 }
 
 public interface ISaveName : ISaveData
 {
-    string name { get; }
-    void SetAsDefault();
+    string Name { get; }
 }
 
 public class SaveData : ISaveData
 {
-    public int id { get; set; }
+    public int ID { get; set; }
 
     public SaveData()
     {
-        id = -1;
+        ID = -1;
     }
 
     protected SaveData(int newId)
     {
-        id = newId;
+        ID = newId;
     }
 
     public virtual void Save() { }
@@ -29,6 +28,6 @@ public class SaveData : ISaveData
 
 public class SettingsData : SaveData
 {
-    public int defaultUserId { get; set; }
-    public int defaultCategoryId { get; set; }
+    public int DefaultUserId { get; set; }
+    public int DefaultCategoryId { get; set; }
 }

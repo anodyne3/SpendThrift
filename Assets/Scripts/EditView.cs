@@ -9,43 +9,42 @@ public interface IEditView
 
 public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
 {
+    protected T SaveData { get; private set; }
+
     [SerializeField] private Button cancelChangesButton;
     [SerializeField] protected Button confirmChangesButton;
     [SerializeField] protected TextMeshProUGUI alertText;
+    [SerializeField] protected string dataTypeName;
 
-    protected T saveData { get; set; }
+    private string DeleteMessage => $"Are you sure you wish to permanently remove this {dataTypeName}?";
+    private string UniqueNameMessage => $"Please select a unique name for the new {dataTypeName}.";
 
-    protected ItemToolOptions ItemToolOptions;
+    protected ItemToolOptions itemToolOptions;
 
-    protected override void OnAwake()
+    protected virtual void Awake()
     {
-        base.OnAwake();
-
         cancelChangesButton.onClick.AddListener(CancelChanges);
         confirmChangesButton.onClick.AddListener(ConfirmChanges);
     }
 
-    protected abstract void RefreshView();
-
-    protected virtual void ConfirmChanges()
+    protected virtual void OnDestroy()
     {
-        Hide();
+        cancelChangesButton.onClick.RemoveListener(CancelChanges);
+        confirmChangesButton.onClick.RemoveListener(ConfirmChanges);
+        CancelChanges();
     }
 
     protected virtual void CancelChanges()
     {
+        if (itemToolOptions == 0)
+            DeleteItem();
+
         Hide();
     }
 
-    protected virtual void DeleteItem()
+    protected virtual void ConfirmChanges()
     {
-        Database.DeleteSaveData<T>(context[0]);
-        saveData.Save();
-    }
-
-    protected virtual void DuplicateItem(SaveData newSaveData)
-    {
-        Database.SetNewData(newSaveData);
+        Hide();
     }
 
     protected override void OnShow()
@@ -59,16 +58,59 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
     {
         if (context == null)
         {
-            saveData = default;
-            context ??= new[] {Database.GetFreeId<T>(), 0};
-            ItemToolOptions = 0;
+            SaveData = new T();
+            SaveData.AddNewDataWithFreeID();
+            context ??= new[] {SaveData.ID, 0};
+            itemToolOptions = 0;
         }
         else
         {
-            saveData = (T) Database.GetISaveData<T>(context[0]);
-            ItemToolOptions = (ItemToolOptions) context[1];
+            SaveData = (T) Database.GetISaveData<T>(context[0]);
+            itemToolOptions = (ItemToolOptions) context[1];
         }
 
         RefreshView();
+    }
+
+    protected abstract void RefreshView();
+
+    protected void RefreshName<TU>(TU saveData, TMP_InputField nameText) where TU : ISaveName
+    {
+        nameText.text = saveData?.Name;
+        nameText.interactable = itemToolOptions != ItemToolOptions.Delete;
+    }
+
+    protected void RefreshAlertMessage(bool showAlert, string alertMessage = default)
+    {
+        alertText.enabled = showAlert;
+        alertText.text = !string.IsNullOrEmpty(alertMessage)
+            ? alertMessage
+            : itemToolOptions == ItemToolOptions.Delete
+                ? DeleteMessage
+                : UniqueNameMessage;
+    }
+
+    protected void TestNameChange(string newName)
+    {
+        if (SaveData is not ISaveName saveName)
+            return;
+
+        var isEmpty = string.IsNullOrEmpty(newName) || string.IsNullOrWhiteSpace(newName);
+        var isValid = itemToolOptions == ItemToolOptions.Edit && newName == saveName.Name ||
+                      SaveData.IsUniqueName(newName);
+
+        confirmChangesButton.interactable = !isEmpty && isValid;
+        alertText.enabled = !isValid;
+    }
+
+    protected void DeleteItem()
+    {
+        SaveData.DeleteISaveData(context[0]);
+        SaveData.Save();
+    }
+
+    protected void DuplicateItem(T newSaveData)
+    {
+        newSaveData.SetNewData();
     }
 }

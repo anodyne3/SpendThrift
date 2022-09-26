@@ -5,23 +5,27 @@ public class SummaryView : View
 {
     [SerializeField] private Button addSpendButton, editSpendButton;
 
-    protected override void OnAwake()
+    protected void Awake()
     {
-        base.OnAwake();
-
         addSpendButton.onClick.AddListener(AddSpend);
         editSpendButton.onClick.AddListener(EditSpend);
     }
 
-    private void AddSpend()
+    private void OnDestroy()
+    {
+        addSpendButton.onClick.RemoveListener(AddSpend);
+        editSpendButton.onClick.RemoveListener(EditSpend);
+    }
+
+    private static void AddSpend()
     {
         ViewManager.ShowView(ViewType.Spend);
     }
-    
-    private void EditSpend()
+
+    private static void EditSpend()
     {
-        ViewManager.ShowView(ViewType.Spend, new []{0});
+        ViewManager.ShowView(ViewType.Spend, new[] {0});
     }
-    
-    public override ViewType GetViewType() => ViewType.Summary;
+
+    protected override ViewType GetViewType() => ViewType.Summary;
 }

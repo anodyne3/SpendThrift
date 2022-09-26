@@ -9,40 +9,38 @@ public interface IToggleActive
 
 public class GenericPool<T> where T : IToggleActive
 {
-    public List<T> activeItems { get; } = new List<T>();
-    public int activeItemCount => activeItems.Count;
+    public List<T> ActiveItems { get; } = new();
+    public int ActiveItemCount => ActiveItems.Count;
 
-    private readonly ConcurrentBag<T> _objects;
-    private readonly Func<T> _objectGenerator;
+    private readonly ConcurrentBag<T> objects;
+    private readonly Func<T> objectGenerator;
 
     public GenericPool(Func<T> objectGenerator)
     {
         if (objectGenerator == null)
             return;
 
-        _objects = new ConcurrentBag<T>();
-        _objectGenerator = objectGenerator;
+        objects = new ConcurrentBag<T>();
+        this.objectGenerator = objectGenerator;
     }
 
     public T Get()
     {
-        if (!_objects.TryTake(out var item))
-        {
-            item = _objectGenerator();
-        }
+        if (!objects.TryTake(out var item))
+            item = objectGenerator();
 
         item.ToggleActive(true);
-        activeItems.Add(item);
+        ActiveItems.Add(item);
         return item;
     }
 
     public void Release(T item)
     {
-        if (!activeItems.Contains(item))
+        if (!ActiveItems.Contains(item))
             return;
 
         item.ToggleActive(false);
-        _objects.Add(item);
-        activeItems.Remove(item);
+        objects.Add(item);
+        ActiveItems.Remove(item);
     }
 }

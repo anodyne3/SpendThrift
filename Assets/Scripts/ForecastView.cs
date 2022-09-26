@@ -1,4 +1,4 @@
 ﻿public class ForecastView : View
 {
-    public override ViewType GetViewType() => ViewType.Forecast;
+    protected override ViewType GetViewType() => ViewType.Forecast;
 }

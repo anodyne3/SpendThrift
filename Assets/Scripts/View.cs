@@ -5,14 +5,8 @@ public abstract class View : MonoBehaviour
     [SerializeField] protected bool isFixed;
 
     protected int[] context;
-    public ViewType viewType => GetViewType();
 
-    private void Awake()
-    {
-        OnAwake();
-    }
-
-    protected virtual void OnAwake() { }
+    public ViewType ViewType => GetViewType();
 
     public virtual void Show(int[] newContext)
     {
@@ -25,14 +19,10 @@ public abstract class View : MonoBehaviour
 
     protected virtual void OnShow() { }
 
-    public virtual void Hide()
+    public void Hide()
     {
         gameObject.SetActive(isFixed);
-
-        OnHide();
     }
 
-    protected virtual void OnHide() { }
-
-    public abstract ViewType GetViewType();
+    protected abstract ViewType GetViewType();
 }

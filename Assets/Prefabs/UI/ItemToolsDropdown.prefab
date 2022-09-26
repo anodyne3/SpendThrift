@@ -263,13 +263,7 @@ MonoBehaviour:
   m_ItemImage: {fileID: 0}
   m_Value: 0
   m_Options:
-    m_Options:
-    - m_Text: Edit
-      m_Image: {fileID: 0}
-    - m_Text: Delete
-      m_Image: {fileID: 0}
-    - m_Text: Duplicate
-      m_Image: {fileID: 0}
+    m_Options: []
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -646,6 +640,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2136142939221070448, guid: 3d5329b070e8cac4d8761a1c6f8d1702, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7523390953609050364, guid: 3d5329b070e8cac4d8761a1c6f8d1702, type: 3}
       propertyPath: m_Name
       value: OptionItem
@@ -663,7 +661,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 1523549393885062962}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 

@@ -17,7 +17,7 @@ public class ViewManager : MonoBehaviour
         View requiredView = null;
 
         foreach (var view in AllViews)
-            if (view.viewType == viewType)
+            if (view.ViewType == viewType)
             {
                 requiredView = view;
                 break;
@@ -56,7 +56,7 @@ public class ViewManager : MonoBehaviour
         View requiredView = null;
 
         foreach (var view in AllViews)
-            if (view.viewType == viewType)
+            if (view.ViewType == viewType)
                 requiredView = view;
 
         return requiredView;

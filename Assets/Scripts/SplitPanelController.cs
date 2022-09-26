@@ -14,33 +14,24 @@ public class SplitPanelController : EditView<SpendData>, IRefreshControls
 
     private NewSplitControl addControl;
     private readonly List<SplitControl> controls = new();
+    private SpendData tempData;
 
-    protected override void OnAwake()
+    protected override void Awake()
     {
-        base.OnAwake();
+        base.Awake();
 
         totalAmount.contentType = TMP_InputField.ContentType.DecimalNumber;
-        totalAmount.onValueChanged.AddListener(UpdateTotalAmount);
+
+        totalAmount.onEndEdit.AddListener(UpdateTotalAmount);
         blockerButton.onClick.AddListener(CancelChanges);
     }
 
-    protected override void OnShow()
+    protected override void OnDestroy()
     {
-        base.OnShow();
+        base.OnDestroy();
 
-        RefreshControls();
-    }
-
-    protected override void RefreshView()
-    {
-        totalAmount.SetTextWithoutNotify(saveData.amount.ToString(CultureInfo.CurrentCulture));
-    }
-
-    protected override void ConfirmChanges()
-    {
-        base.ConfirmChanges();
-        
-        ViewManager.RefreshView(ViewType.EditSpend);
+        totalAmount.onEndEdit.RemoveListener(UpdateTotalAmount);
+        blockerButton.onClick.RemoveListener(CancelChanges);
     }
 
     private void UpdateTotalAmount(string totalAmountText)
@@ -48,33 +39,36 @@ public class SplitPanelController : EditView<SpendData>, IRefreshControls
         if (!float.TryParse(totalAmountText, NumberStyles.Currency, CultureInfo.CurrentCulture, out var newTotalAmount))
             return;
 
-        var oldTotalAmount = saveData.amount;
-        var amountChange = oldTotalAmount - newTotalAmount / oldTotalAmount;
-        foreach (var split in saveData.splitShares)
-        {
-            split.LiabilitySplit *= amountChange;
-            split.PaymentSplit *= amountChange;
-        }
-
-        saveData.amount = newTotalAmount;
+        tempData.Amount = newTotalAmount;
+        totalAmount.SetTextWithoutNotify(newTotalAmount.ToString("C", CultureInfo.CurrentCulture));
 
         foreach (var control in controls)
         {
-            control.RefreshSliders(saveData.amount);
+            control.RefreshSplits(tempData.Amount);
         }
+    }
+
+    protected override void OnShow()
+    {
+        base.OnShow();
+
+        tempData = SaveData;
+
+        RefreshControls();
     }
 
     public void RefreshControls()
     {
-        if (saveData == null)
+        if (tempData == null)
             return;
 
-        if (saveData.CanAddUser(out _))
+        if (tempData.CanAddUser(out _))
         {
             if (!addControl)
             {
                 addControl = Instantiate(addControlPrefab, controlList);
-                addControl.SetData(saveData);
+                addControl.AddSplitShare = AddSplit;
+                addControl.SetData(tempData);
             }
         }
         else if (addControl)
@@ -83,9 +77,7 @@ public class SplitPanelController : EditView<SpendData>, IRefreshControls
         }
 
         foreach (var control in controls)
-        {
             Destroy(control.gameObject);
-        }
 
         controls.Clear();
         GenerateControls();
@@ -94,45 +86,76 @@ public class SplitPanelController : EditView<SpendData>, IRefreshControls
 
     private void GenerateControls()
     {
-        foreach (var item in saveData.splitShares)
+        foreach (var item in tempData.SplitShares)
         {
             var control = Instantiate(controlPrefab, controlList);
-            control.removeSplit = saveData.splitShares.Count > 1 ? RemoveSplit : null;
+            control.removeSplit = tempData.SplitShares.Count > 1 ? RemoveSplit : null;
             control.SetData(item);
-            control.RefreshSliders(saveData.amount);
+            control.RefreshSplits(tempData.Amount);
             controls.Add(control);
         }
     }
 
-    private void RemoveSplit(SpendData.SplitShare splitShare)
+    private void AddSplit()
     {
-        if (saveData.splitShares.Contains(splitShare))
+        if (SaveData.CanAddUser(out var addedUser))
+            tempData.SplitShares.Add(new SplitShare(addedUser.ID)
+                {LiabilitySplit = UpdateLiabilitySplits(), PaymentSplit = 0f});
+
+        ViewManager.RefreshView(ViewType.EditSplitShares);
+
+        float UpdateLiabilitySplits()
         {
-            saveData.splitShares.Remove(splitShare);
-            AdjustRemainingSplits(splitShare);
-            saveData.Save();
+            var newLiability = 0f;
+
+            foreach (var splitShare in tempData.SplitShares)
+            {
+                var change = splitShare.LiabilitySplit / (tempData.SplitShares.Count + 1);
+                newLiability += change;
+                splitShare.LiabilitySplit -= change;
+            }
+
+            return newLiability;
+        }
+    }
+
+    private void RemoveSplit(SplitShare splitShare)
+    {
+        if (tempData.SplitShares.Contains(splitShare))
+        {
+            tempData.SplitShares.Remove(splitShare);
+            AdjustRemainingSplits();
+            tempData.Save();
             RefreshControls();
         }
-    }
 
-    private void AdjustRemainingSplits(SpendData.SplitShare splitShare)
-    {
-        var remainingSplitCount = saveData.splitShares.Count;
-        var liability = splitShare.LiabilitySplit / saveData.splitShares.Count;
-        var payment = splitShare.PaymentSplit / remainingSplitCount;
-
-        foreach (var saveDataSplitShare in saveData.splitShares)
+        void AdjustRemainingSplits()
         {
-            saveDataSplitShare.LiabilitySplit += liability;
-            saveDataSplitShare.PaymentSplit += payment;
+            var remainingSplitCount = tempData.SplitShares.Count;
+            var liability = splitShare.LiabilitySplit / tempData.SplitShares.Count;
+            var payment = splitShare.PaymentSplit / remainingSplitCount;
+
+            foreach (var saveDataSplitShare in tempData.SplitShares)
+            {
+                saveDataSplitShare.LiabilitySplit += liability;
+                saveDataSplitShare.PaymentSplit += payment;
+            }
         }
     }
 
-    private void OnDestroy()
+    protected override void RefreshView()
     {
-        totalAmount.onValueChanged.RemoveListener(UpdateTotalAmount);
-        blockerButton.onClick.RemoveListener(CancelChanges);
+        totalAmount.SetTextWithoutNotify(SaveData.Amount.ToString("C", CultureInfo.CurrentCulture));
     }
 
-    public override ViewType GetViewType() => ViewType.EditSplitShares;
+    protected override void ConfirmChanges()
+    {
+        tempData.SetNewData();
+
+        base.ConfirmChanges();
+
+        ViewManager.RefreshView(ViewType.EditSpend);
+    }
+
+    protected override ViewType GetViewType() => ViewType.EditSplitShares;
 }

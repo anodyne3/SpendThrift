@@ -1,12 +1,8 @@
-﻿public class NewSplitControl : NewControl<SpendData>
-{
-    protected override void ShowNewItemPanel()
-    {
-        if (data.CanAddUser(out var addedUser))
-        {
-            data.AddSplitShare(addedUser.id);
-        }
+﻿using UnityEngine.Events;
 
-        ViewManager.RefreshView(ViewType.EditSplitShares);
-    }
+public class NewSplitControl : NewControl<SpendData>
+{
+    public UnityAction AddSplitShare { get; set; }
+
+    protected override void ShowNewItemPanel() => AddSplitShare.Invoke();
 }

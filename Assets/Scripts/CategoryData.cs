@@ -6,19 +6,19 @@ public class CategoryData : SaveData, ISaveName
 {
     public CategoryData() : base(0) { }
 
-    public CategoryData(int newId, string newName, int newParentCategoryId) : base(newId)
+    public CategoryData(int id, string name, int parentCategoryId) : base(id)
     {
-        name = newName;
-        parentCategoryId = newParentCategoryId;
+        Name = name;
+        ParentCategoryId = parentCategoryId;
     }
 
-    public string name { get; set; }
-    public int parentCategoryId { get; set; }
+    public string Name { get; set; }
+    public int ParentCategoryId { get; set; } = -1;
 
     public void SetAsDefault()
     {
-        Database.settingsData.defaultCategoryId = id;
-        PlayerPrefs.SetInt(SaveSystem.DefaultCategoryKey, id);
+        Database.SettingsData.DefaultCategoryId = ID;
+        PlayerPrefs.SetInt(SaveSystem.DefaultCategoryKey, ID);
     }
 
     public override void Save()

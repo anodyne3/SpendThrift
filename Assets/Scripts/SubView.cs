@@ -15,12 +15,28 @@ public abstract class SubView<T> : View, IRefreshControls where T : SaveData, ne
 
     private readonly List<ToolsControlItem<T>> controls = new();
 
-    protected override void OnAwake()
-    {
-        base.OnAwake();
+    protected List<T> controlData;
 
+    protected virtual void Awake()
+    {
+        controlData = Database.GetDataList<T>();
+        
         Instantiate(newControlPrefab, controlList);
         GenerateControls();
+    }
+
+    protected virtual void GenerateControls()
+    {
+        if (controlData == null)
+            return;
+
+        foreach (var item in controlData)
+        {
+            var control = Instantiate(controlPrefab, controlList);
+            control.SetData(item);
+            control.Initialize(dropdownOptions);
+            controls.Add(control);
+        }
     }
 
     public virtual void RefreshControls()
@@ -32,21 +48,5 @@ public abstract class SubView<T> : View, IRefreshControls where T : SaveData, ne
 
         controls.Clear();
         GenerateControls();
-    }
-
-    private void GenerateControls()
-    {
-        var saveData = Database.GetDataList<T>();
-
-        if (saveData == null)
-            return;
-
-        foreach (var item in saveData)
-        {
-            var control = Instantiate(controlPrefab, controlList);
-            control.Initialize(dropdownOptions);
-            control.SetData(item);
-            controls.Add(control);
-        }
     }
 }

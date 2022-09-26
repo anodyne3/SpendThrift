@@ -9,6 +9,6 @@ public class UserControl : ToolsControlItem<UserData>
     {
         base.Refresh();
         
-        nameText.text = data.name;
+        nameText.text = Data.Name;
     }
 }

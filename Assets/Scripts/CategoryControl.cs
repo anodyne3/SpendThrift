@@ -9,6 +9,6 @@ public class CategoryControl : ToolsControlItem<CategoryData>
     {
         base.Refresh();
 
-        nameText.text = data.name;
+        nameText.text = Data.Name;
     }
 }

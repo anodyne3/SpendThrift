@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,6 +18,14 @@ public class MainView : View
         ViewManager.ShowView(ViewType.Main);
     }
 
+    private void OnDestroy()
+    {
+        modeButton.onClick.RemoveListener(SwitchMode);
+        usersButton.onClick.RemoveListener(() => ViewManager.ShowView(ViewType.User));
+        spendButton.onClick.RemoveListener(() => ViewManager.ShowView(ViewType.Spend));
+        categoryButton.onClick.RemoveListener(() => ViewManager.ShowView(ViewType.Category));
+    }
+
     private void Start()
     {
         SpendThriftUtils.SetConsistentFontSize(new List<Component> {categoryButton, spendButton, usersButton});
@@ -29,10 +38,5 @@ public class MainView : View
         forecastMode = !forecastMode;
     }
 
-    private void ShowForecast()
-    {
-        ViewManager.ShowView(ViewType.Forecast);
-    }
-
-    public override ViewType GetViewType() => ViewType.Main;
+    protected override ViewType GetViewType() => ViewType.Main;
 }
