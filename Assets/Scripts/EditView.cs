@@ -44,6 +44,9 @@ public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
 
     protected virtual void ConfirmChanges()
     {
+        if (itemToolOptions == 0)
+            itemToolOptions = ItemToolOptions.Edit;
+        
         Hide();
     }
 

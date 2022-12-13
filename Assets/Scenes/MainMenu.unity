@@ -1299,7 +1299,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4924143128950796891, guid: 7ad4849dbff404041b3ca67d41fa99cf, type: 3}
       propertyPath: m_text
-      value: Users
+      value: Spenders
       objectReference: {fileID: 0}
     - target: {fileID: 5736695645200636005, guid: 7ad4849dbff404041b3ca67d41fa99cf, type: 3}
       propertyPath: m_Pivot.x
@@ -1750,7 +1750,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 70.3
+  m_fontSize: 63
   m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 1

@@ -23,7 +23,7 @@ public class SaveData : ISaveData
         ID = newId;
     }
 
-    public virtual void Save() { }
+    public virtual void Save() { } //virtual??
 }
 
 public class SettingsData : SaveData

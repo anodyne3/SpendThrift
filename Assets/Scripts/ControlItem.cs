@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public abstract class ControlItem<T> : MonoBehaviour
 {
-    protected T Data { get; private set; }
+    protected internal T Data { get; private set; }
 
     public void SetData(T data)
     {
@@ -19,7 +19,8 @@ public abstract class ToolsControlItem<T> : ControlItem<T> where T : SaveData, n
 {
     private ItemToolDropdown itemToolDropdown;
 
-    private void Awake()
+    //merge with initialization
+    private void Init()
     {
         if (GetComponentInChildren(typeof(ItemToolDropdown)) is not ItemToolDropdown anItemToolDropdown)
             return;
@@ -28,11 +29,15 @@ public abstract class ToolsControlItem<T> : ControlItem<T> where T : SaveData, n
         itemToolDropdown.optionSelected.AddListener(ShowView);
     }
 
-    private void OnDestroy() => itemToolDropdown.optionSelected.RemoveListener(ShowView);
+    private void OnDestroy()
+    {
+        if (itemToolDropdown)
+            itemToolDropdown.optionSelected.RemoveListener(ShowView);
+    }
 
     private void ShowView(ItemToolOptions itemToolOptions)
     {
-        var context = new[] {Data?.ID ?? Data.GetFreeId(), (int) itemToolOptions};
+        var context = new[] { Data?.ID ?? Data.GetFreeId(), (int)itemToolOptions };
 
         switch (Data)
         {
@@ -56,6 +61,9 @@ public abstract class ToolsControlItem<T> : ControlItem<T> where T : SaveData, n
 
     public void Initialize(ItemToolOptions itemToolOptions)
     {
+        if (!itemToolDropdown)
+            Init();
+
         itemToolDropdown.interactable = Data.ID != Database.UnassignedCategoryId || Data is not CategoryData;
 
         itemToolDropdown.InitializeDropdown(itemToolOptions);

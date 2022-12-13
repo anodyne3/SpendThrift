@@ -13,7 +13,7 @@ public abstract class SubView<T> : View, IRefreshControls where T : SaveData, ne
     [SerializeField] private NewControl<T> newControlPrefab;
     [SerializeField] private ItemToolOptions dropdownOptions;
 
-    private readonly List<ToolsControlItem<T>> controls = new();
+    protected readonly List<ToolsControlItem<T>> controls = new();
 
     protected List<T> controlData;
 
@@ -37,6 +37,11 @@ public abstract class SubView<T> : View, IRefreshControls where T : SaveData, ne
             control.Initialize(dropdownOptions);
             controls.Add(control);
         }
+    }
+
+    protected virtual void SortControls()
+    {
+        
     }
 
     public virtual void RefreshControls()

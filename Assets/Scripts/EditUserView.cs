@@ -12,7 +12,7 @@ public class EditUserView : EditView<UserData>
         userName.contentType = TMP_InputField.ContentType.Name;
         userName.onValueChanged.AddListener(TestNameChange);
 
-        dataTypeName = "User";
+        dataTypeName = "Spender";
     }
 
     protected override void OnDestroy()
