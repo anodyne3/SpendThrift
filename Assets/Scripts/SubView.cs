@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public interface IRefreshControls
 {
@@ -14,14 +15,24 @@ public abstract class SubView<T> : View, IRefreshControls where T : SaveData, ne
     [SerializeField] private ItemToolOptions dropdownOptions;
 
     protected readonly List<ToolsControlItem<T>> controls = new();
+    protected NewControl<T> newControlItem;
 
     protected List<T> controlData;
+    protected float scrollViewWidth;
 
     protected virtual void Awake()
     {
         controlData = Database.GetDataList<T>();
-        
-        Instantiate(newControlPrefab, controlList);
+
+        if (GetComponentInChildren(typeof(ScrollRect), true) is ScrollRect scrollView)
+        {
+            if (scrollView.TryGetComponent(typeof(RectTransform), out var component) &&
+                component is RectTransform rectTransform)
+                scrollViewWidth = rectTransform.rect.width;
+        }
+
+        newControlItem = Instantiate(newControlPrefab, controlList);
+
         GenerateControls();
     }
 
@@ -41,7 +52,6 @@ public abstract class SubView<T> : View, IRefreshControls where T : SaveData, ne
 
     protected virtual void SortControls()
     {
-        
     }
 
     public virtual void RefreshControls()
