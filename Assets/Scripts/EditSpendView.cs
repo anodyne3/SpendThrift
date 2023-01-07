@@ -17,6 +17,7 @@ public class EditSpendView : EditView<SpendData>, IRefreshView
     [SerializeField] private DictionaryDropdown userDropdown;
     [SerializeField] private Button userSplitButton;
     [SerializeField] private Toggle isRecurringToggle;
+    [SerializeField] private TextMeshProUGUI descriptionTitle;
 
     private DateTime DateFromInput => new(int.Parse(year.text), int.Parse(month.text), int.Parse(day.text));
 
@@ -94,13 +95,18 @@ public class EditSpendView : EditView<SpendData>, IRefreshView
         userSplitButton.interactable = SaveData.Amount > 0;
 
         RefreshAlertMessage(itemToolOptions == ItemToolOptions.Delete);
-        description.textComponent.enabled = itemToolOptions != ItemToolOptions.Delete;
+
+        day.interactable = month.interactable = year.interactable = amount.interactable = userSplitButton.interactable =
+            isRecurringToggle.interactable = itemToolOptions != ItemToolOptions.Delete;
+
+        descriptionTitle.enabled = description.targetGraphic.enabled = itemToolOptions != ItemToolOptions.Delete;
     }
 
     private void InitializeDropdowns()
     {
         categoryDropdown.InitializeDropdown(Database.CategoryData, new List<int> {Database.UnassignedCategoryId});
         categoryDropdown.ShowOptionById(SaveData.CategoryId);
+        categoryDropdown.interactable = itemToolOptions != ItemToolOptions.Delete;
 
         userDropdown.InitializeDropdown(Database.UserData);
 
@@ -110,7 +116,7 @@ public class EditSpendView : EditView<SpendData>, IRefreshView
 
         userDropdown.ShowOptionById(isSplit ? -1 : SaveData.SplitShares[0].UserId);
 
-        userDropdown.interactable = !isSplit;
+        userDropdown.interactable = !isSplit && itemToolOptions != ItemToolOptions.Delete;
     }
 
     protected override void ConfirmChanges()

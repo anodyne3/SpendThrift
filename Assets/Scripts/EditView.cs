@@ -10,11 +10,11 @@ public interface IEditView
 public abstract class EditView<T> : View, IEditView where T : ISaveData, new()
 {
     protected T SaveData { get; private set; }
+    protected string dataTypeName;
 
     [SerializeField] private Button cancelChangesButton;
     [SerializeField] protected Button confirmChangesButton;
     [SerializeField] protected TextMeshProUGUI alertText;
-    [SerializeField] protected string dataTypeName;
 
     private string DeleteMessage => $"Are you sure you wish to permanently remove this {dataTypeName}?";
     private string UniqueNameMessage => $"Please select a unique name for the new {dataTypeName}.";

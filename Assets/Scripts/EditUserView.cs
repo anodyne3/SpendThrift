@@ -9,7 +9,6 @@ public class EditUserView : EditView<UserData>
     {
         base.Awake();
 
-        userName.contentType = TMP_InputField.ContentType.Name;
         userName.onValueChanged.AddListener(TestNameChange);
 
         dataTypeName = "Spender";

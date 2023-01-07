@@ -33,24 +33,19 @@ public static class Database
     {
         var strays = new List<SaveData>();
 
-        switch (saveData)
-        {
-            case CategoryData _:
-                foreach (var category in CategoryData)
-                    if (category.ParentCategoryId == saveData.ID)
-                        strays.Add(category);
+        foreach (var category in CategoryData)
+            if (category.ParentCategoryId == saveData.ID)
+                strays.Add(category);
 
-                break;
-            case SpendData _:
-                foreach (var spend in SpendData)
-                    if (spend.CategoryId == saveData.ID)
-                        strays.Add(spend);
-
-                break;
-        }
+        foreach (var spend in SpendData)
+            if (spend.CategoryId == saveData.ID)
+                strays.Add(spend);
 
         if (strays.Count > 0 && !CategoryData.Exists(x => x.ID == UnassignedCategoryId))
             SetNewData(new CategoryData(UnassignedCategoryId, "Unassigned", -1));
+
+        if (saveData.ID == UnassignedCategoryId)
+            return strays.Count;
 
         foreach (var stray in strays)
         {
@@ -64,6 +59,8 @@ public static class Database
                     straySpend.CategoryId = UnassignedCategoryId;
                     break;
             }
+
+            stray.Save();
         }
 
         return strays.Count;
@@ -85,7 +82,7 @@ public static class Database
 
     public static void DeleteISaveData<T>(this T saveData, int id) where T : ISaveData, new()
     {
-        saveData.GetIDataList().Remove((T) GetISaveData<T>(id));
+        saveData.GetIDataList().Remove((T)GetISaveData<T>(id));
     }
 
     private static List<T> GetIDataList<T>(this T t) where T : ISaveData
@@ -177,7 +174,7 @@ public static class Database
             return true;
 
         foreach (var saveName in saveDataList)
-            if (((ISaveName) saveName).Name == newName)
+            if (((ISaveName)saveName).Name == newName)
                 return false;
 
         return true;

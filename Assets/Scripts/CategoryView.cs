@@ -41,7 +41,17 @@ public class CategoryView : SubView<CategoryData>
 
         foreach (var control in controls)
         {
-            ((CategoryControl)control).childCategories.Clear(); //is this necessary?
+            if (control is CategoryControl categoryControl)
+                categoryControl.childCategories.Clear();
+        }
+
+        foreach (var control in controls)
+        {
+            if (control.Data.ID == Database.UnassignedCategoryId)
+            {
+                control.transform.SetSiblingIndex(1);
+                continue;
+            }
             
             if (control.Data.ParentCategoryId < 0)
                 continue;
@@ -51,20 +61,30 @@ public class CategoryView : SubView<CategoryData>
 
             if (control is CategoryControl childControl)
             {
-                childControl.SetInitialWidth(parentControl.rectWidth - SubcategoryMargin);
+                childControl.SetInitialWidth(parentControl.rectWidth);
                 parentControl.childCategories.Add(childControl);
                 SetSiblingIndex(parentControl, childControl);
             }
 
             parentControl.OnSorted();
         }
+
+        foreach (var control in controls)
+        {
+            if (control is not CategoryControl categoryControl || categoryControl.childCategories.Count < 1)
+                continue;
+
+            foreach (var childCategory in categoryControl.childCategories)
+                childCategory.SetInitialWidth(categoryControl.rectWidth - SubcategoryMargin);
+        }
     }
-    
-    private void SetSiblingIndex(CategoryControl parentControlItem, CategoryControl childControlItem)
+
+    private void SetSiblingIndex(CategoryControl parentControlItem, Component childControlItem)
     {
         var parentIndex = controls.Find(x => x.Data.ID == parentControlItem.Data.ID);
-        
-        childControlItem.transform.SetSiblingIndex(parentIndex.transform.GetSiblingIndex() + parentControlItem.childCategories.Count);
+
+        childControlItem.transform.SetSiblingIndex(parentIndex.transform.GetSiblingIndex() +
+                                                   parentControlItem.childCategories.Count);
     }
 
     protected override ViewType GetViewType() => ViewType.Category;

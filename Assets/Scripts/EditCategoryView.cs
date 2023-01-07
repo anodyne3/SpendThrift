@@ -11,7 +11,6 @@ public class EditCategoryView : EditView<CategoryData>
     {
         base.Awake();
 
-        categoryName.contentType = TMP_InputField.ContentType.Name;
         categoryName.onValueChanged.AddListener(TestNameChange);
 
         dataTypeName = "Category";
@@ -30,7 +29,7 @@ public class EditCategoryView : EditView<CategoryData>
         RefreshAlertMessage(itemToolOptions > 0 && itemToolOptions != ItemToolOptions.Edit);
 
         categoryDropdown.InitializeDropdown(Database.CategoryData,
-            new List<int> {SaveData.ID, Database.UnassignedCategoryId});
+            new List<int> { SaveData.ID, Database.UnassignedCategoryId });
         categoryDropdown.InsertOption(0, "None", -1);
         categoryDropdown.ShowOptionById(SaveData?.ParentCategoryId ?? -1);
 

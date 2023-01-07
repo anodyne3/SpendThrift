@@ -12,7 +12,21 @@ public class SpendControl : ToolsControlItem<SpendData>
 
         dateText.text = Data.Date.ToString("ddd dd MMM yy");
         amountText.text = Data.Amount.ToString("C", CultureInfo.CurrentCulture);
-        categoryText.text = Database.GetSaveData<CategoryData>(Data.CategoryId).Name;
+        categoryText.text = LongName();
         descriptionText.text = Data.Description;
+    }
+
+    private string LongName()
+    {
+        var catData = Database.GetSaveData<CategoryData>(Data.CategoryId);
+        var longName = catData.Name;
+
+        while (catData.ParentCategoryId > -1)
+        {
+            catData = Database.GetSaveData<CategoryData>(catData.ParentCategoryId);
+            longName = catData.Name + " - " + longName;
+        }
+
+        return longName;
     }
 }
