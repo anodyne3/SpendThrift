@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SpendView : SubView<SpendData>
 {
-    private enum DateRangeType { Day, Week, Month, Quarter, Year, All }
-
-    [SerializeField] private Button previousButton, nextButton;
-    [SerializeField] private TMP_Dropdown periodDropdown;
+    [SerializeField] private Button previousButton, nextButton, dateRangeButton;
 
     private DateRange dateRange;
     private DateRangeType currentDateRangeType;
@@ -17,38 +12,41 @@ public class SpendView : SubView<SpendData>
     protected override void Awake()
     {
         SetDateRange(DateTime.UtcNow, DateRangeType.Month);
-        periodDropdown.AddOptions(new List<string>(Enum.GetNames(typeof(DateRangeType))));
 
         base.Awake();
 
         previousButton.onClick.AddListener(PreviousPeriod);
         nextButton.onClick.AddListener(NextPeriod);
-        periodDropdown.onValueChanged.AddListener(SelectPeriod);
+        dateRangeButton.onClick.AddListener(ShowDateRange);
     }
 
     private void OnDestroy()
     {
         previousButton.onClick.RemoveListener(PreviousPeriod);
         nextButton.onClick.RemoveListener(NextPeriod);
-        periodDropdown.onValueChanged.RemoveListener(SelectPeriod);
     }
 
     private void PreviousPeriod()
     {
         dateRange.SubtractTime(DateRangeType.Month);
-        GenerateControls();
-    }
 
-    private void SelectPeriod(int periodChange)
-    {
-        currentDateRangeType = (DateRangeType) periodChange;
-        SetDateRange(dateRange.StartDate, currentDateRangeType);
+        base.RefreshControls();
+
+        GenerateControls();
     }
 
     private void NextPeriod()
     {
         dateRange.AddTime(DateRangeType.Month);
+
+        base.RefreshControls();
+
         GenerateControls();
+    }
+
+    private void ShowDateRange()
+    {
+        ViewManager.ShowView(ViewType.DateRange);
     }
 
     protected override void GenerateControls()
@@ -64,7 +62,7 @@ public class SpendView : SubView<SpendData>
         return dateRange.StartDate <= testDate && testDate <= dateRange.EndDate;
     }
 
-    private void SetDateRange(DateTime startDate, DateRangeType dateRangeType, bool normalPeriod = true)
+    public void SetDateRange(DateTime startDate, DateRangeType dateRangeType, bool normalPeriod = true)
     {
         currentDateRangeType = dateRangeType;
         DateTime startDateTime = DateTime.MinValue, endDateTime = DateTime.MaxValue;
@@ -109,58 +107,4 @@ public class SpendView : SubView<SpendData>
     }
 
     protected override ViewType GetViewType() => ViewType.Spend;
-
-    private class DateRange
-    {
-        public DateTime StartDate { get; private set; }
-        public DateTime EndDate { get; private set; }
-
-        public DateRange(DateTime start, DateTime end)
-        {
-            StartDate = start;
-            EndDate = end;
-        }
-
-        public void AddTime(DateRangeType dateRangeType)
-        {
-            ChangeTime(dateRangeType);
-        }
-
-        public void SubtractTime(DateRangeType dateRangeType)
-        {
-            ChangeTime(dateRangeType, false);
-        }
-
-        private void ChangeTime(DateRangeType dateRangeType, bool add = true)
-        {
-            switch (dateRangeType)
-            {
-                case DateRangeType.Day:
-                    StartDate = StartDate.AddDays(add ? 1 : -1);
-                    EndDate = EndDate.AddDays(add ? 1 : -1);
-                    break;
-                case DateRangeType.Week:
-                    StartDate = StartDate.AddDays(add ? 1 : -7);
-                    EndDate = EndDate.AddDays(add ? 1 : -7);
-                    break;
-                case DateRangeType.Month:
-                    StartDate = StartDate.AddMonths(add ? 1 : -1);
-                    EndDate = EndDate.AddMonths(add ? 1 : -1);
-                    break;
-                case DateRangeType.Quarter:
-                    StartDate = StartDate.AddMonths(add ? 1 : -3);
-                    EndDate = EndDate.AddMonths(add ? 1 : -3);
-                    break;
-                case DateRangeType.Year:
-                    StartDate = StartDate.AddYears(add ? 1 : -1);
-                    EndDate = EndDate.AddYears(add ? 1 : -1);
-                    break;
-                default:
-                case DateRangeType.All:
-                    StartDate = DateTime.MinValue;
-                    EndDate = DateTime.MaxValue;
-                    break;
-            }
-        }
-    }
 }

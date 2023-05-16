@@ -112,6 +112,8 @@ public static class Database
                 return GetSpendData(id);
             case UserData _:
                 return GetUserData(id);
+            case SpendDateRangeData _:
+                return SettingsData.DateRangeData;
         }
 
         return t as SaveData;

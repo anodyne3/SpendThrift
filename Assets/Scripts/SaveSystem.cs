@@ -15,13 +15,51 @@ public static class SaveSystem
     public const string DefaultCategoryKey = "defaultCategoryKey";
     public const string DefaultUserKey = "defaultUserKey";
 
+    private const string DateRangeTypeKey = "dateRangeTypeKey";
+    private const string DateRangeStartKey = "dateRangeStartKey";
+    private const string DateRangeEndKey = "dateRangeEndKey";
+
     public static SettingsData LoadSettings()
     {
+        var dateRangeType = (DateRangeType)PlayerPrefs.GetInt(DateRangeTypeKey, 2);
+        var newStartDate = DateTime.TryParse(PlayerPrefs.GetString(DateRangeStartKey), out var startDate)
+            ? startDate
+            : DateTime.UtcNow;
+
+        var newDateRange = new SpendDateRangeData
+        {
+            DateRangeType = dateRangeType,
+            DateRange = new DateRange(newStartDate,
+                DateTime.TryParse(PlayerPrefs.GetString(DateRangeEndKey), out var endDate)
+                    ? endDate
+                    : GetEndTime())
+        };
+
         return new SettingsData
         {
             DefaultUserId = PlayerPrefs.GetInt(DefaultUserKey, 0),
-            DefaultCategoryId = PlayerPrefs.GetInt(DefaultCategoryKey, 0)
+            DefaultCategoryId = PlayerPrefs.GetInt(DefaultCategoryKey, 0),
+            DateRangeData = newDateRange
         };
+
+        DateTime GetEndTime()
+        {
+            switch (dateRangeType)
+            {
+                case DateRangeType.Day:
+                    return newStartDate.AddDays(1);
+                case DateRangeType.Week:
+                    return newStartDate.AddDays(7);
+                case DateRangeType.Month:
+                    return newStartDate.AddMonths(1);
+                case DateRangeType.Quarter:
+                    return newStartDate.AddMonths(3);
+                case DateRangeType.Year:
+                    return newStartDate.AddYears(1);
+                default:
+                    return DateTime.MaxValue;
+            }
+        }
     }
 
     public static List<T> LoadData<T>() where T : SaveData, new()

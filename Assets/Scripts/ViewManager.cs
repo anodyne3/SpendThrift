@@ -1,10 +1,12 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class ViewManager : MonoBehaviour
 {
     private static View[] AllViews;
     private static View ActiveView;
     private static SubView<SaveData> ActiveSubView;
+    public static Stack<View> FloatingViewStack { get; } = new();
 
     private void Awake()
     {
@@ -35,6 +37,9 @@ public class ViewManager : MonoBehaviour
                 break;
             case IEditView editView:
                 SetActiveView(editView, contextId);
+                break;
+            case FloatingView floatingView:
+                SetActiveView(floatingView);
                 break;
             default:
                 SetActiveView(requiredView, contextId);
@@ -83,5 +88,12 @@ public class ViewManager : MonoBehaviour
     private static void SetActiveView(IEditView nextView, int[] contextId)
     {
         nextView.Show(contextId);
+    }
+
+    private static void SetActiveView(FloatingView floatingView)
+    {
+        FloatingViewStack.Push(ActiveView);
+        
+        floatingView.Show(null);
     }
 }

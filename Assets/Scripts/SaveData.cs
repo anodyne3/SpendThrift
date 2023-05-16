@@ -30,4 +30,11 @@ public class SettingsData : SaveData
 {
     public int DefaultUserId { get; set; }
     public int DefaultCategoryId { get; set; }
+    public SpendDateRangeData DateRangeData { get; set; }
+}
+
+public class SpendDateRangeData : SaveData
+{
+    public DateRangeType DateRangeType { get; set; } = DateRangeType.Month;
+    public DateRange DateRange { get; set; }
 }

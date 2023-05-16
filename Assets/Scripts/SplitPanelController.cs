@@ -143,6 +143,7 @@ public class SplitPanelController : EditView<SpendData>, IRefreshControls
         }
     }
 
+    //todo theres a bug in here where savedata becomes null
     protected override void RefreshView()
     {
         totalAmount.SetTextWithoutNotify(SaveData.Amount.ToString("C", CultureInfo.CurrentCulture));
